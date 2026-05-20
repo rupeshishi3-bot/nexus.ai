@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Quick Notes — NEXUS Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#040508;--bg2:#080b12;--bg3:#0c1020;--surface:rgba(255,255,255,.035);--surface2:rgba(255,255,255,.06);--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);--text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;--accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;--amber:#f5a623;--red:#f0635a;--glow:rgba(91,141,238,.25);--r:12px;--r2:18px;--fd:'Syne',sans-serif;--fm:'Space Mono',monospace;--fb:'DM Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);overflow-x:hidden;cursor:none;transition:background .4s,color .4s;line-height:1.6}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+#cur{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s;mix-blend-mode:screen}
+#ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(91,141,238,.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s}
+#bgc{position:fixed;inset:0;z-index:0;opacity:.5}
+.w{position:relative;z-index:1;min-height:100vh}
+nav{position:fixed;inset:0 0 auto;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,.7);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);transition:background .3s}
+.logo{font-family:var(--fd);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;cursor:none}
+.logo span{-webkit-text-fill-color:var(--accent3)}
+.nr{display:flex;align-items:center;gap:.75rem}
+.back{padding:.4rem .9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:.875rem;text-decoration:none;cursor:none;transition:.2s}.back:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
+.thm{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;transition:.2s}.thm:hover{border-color:var(--accent)}
+main{max-width:760px;margin:0 auto;padding:96px 2rem 5rem}
+@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hdr{margin-bottom:2.5rem;animation:fu .7s ease both}
+.bc{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--text3);margin-bottom:1.25rem;flex-wrap:wrap}
+.bc a{color:var(--text3);text-decoration:none;cursor:none}.bc a:hover{color:var(--accent)}.bc s{opacity:.4}
+.hero{display:flex;align-items:center;gap:1.25rem}
+.ic{width:64px;height:64px;border-radius:18px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.25);display:flex;align-items:center;justify-content:center;font-size:1.75rem;flex-shrink:0}
+.ttl{font-family:var(--fd);font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:.35rem}
+.sub{color:var(--text2);font-size:.9375rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:2rem;animation:fu .7s ease .1s both}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:10px;font-size:.9375rem;font-weight:500;font-family:var(--fb);cursor:none;transition:all .2s;border:none;outline:none}
+.bp{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,141,238,.3)}
+.bp:hover{transform:translateY(-1px)}
+.bs{background:var(--surface2);border:1px solid var(--border2);color:var(--text)}.bs:hover{border-color:var(--accent);color:var(--accent)}
+.bsm{padding:.5rem 1rem;font-size:.875rem}
+/* Toolbar */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem}
+.tool-left{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.tbtn{padding:.35rem .75rem;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:.8rem;cursor:none;transition:.2s}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+/* Stats bar */
+.stats-bar{display:flex;gap:1.25rem;flex-wrap:wrap;padding:.65rem 0;border-top:1px solid var(--border);margin-top:.65rem}
+.stat-item{font-size:.8rem;color:var(--text3)}
+.stat-item span{color:var(--accent);font-family:var(--fm);font-weight:700}
+/* Notes textarea */
+#notes-area{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1.25rem;color:var(--text);font-size:.9375rem;font-family:var(--fb);outline:none;resize:vertical;min-height:340px;line-height:1.8;transition:border-color .2s,box-shadow .2s;cursor:text}
+#notes-area:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,.12)}
+#notes-area::placeholder{color:var(--text3)}
+/* Saved indicator */
+.saved-ind{font-size:.75rem;color:var(--text3);display:flex;align-items:center;gap:.35rem;transition:color .3s}
+.saved-ind.ok{color:var(--green,#2fd771)}
+/* Info grid */
+.ig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:2rem;animation:fu .7s ease .2s both}
+@media(max-width:560px){.ig{grid-template-columns:1fr}}
+.icard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem}
+.iico{font-size:1.5rem;margin-bottom:.6rem}
+.ittl{font-family:var(--fd);font-size:.875rem;font-weight:700;margin-bottom:.3rem}
+.idesc{font-size:.8rem;color:var(--text3);line-height:1.5}
+#toast{position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:.875rem 1.25rem;display:flex;align-items:center;gap:.75rem;font-size:.875rem;color:var(--text);box-shadow:0 20px 40px rgba(0,0,0,.4);transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+.lm{--bg:#faf8f4;--bg2:#fff;--bg3:#f2efe9;--surface:rgba(15,10,5,.045);--surface2:rgba(15,10,5,.08);--border:rgba(15,10,5,.09);--border2:rgba(15,10,5,.16);--text:#130f0a;--text2:#5a5048;--text3:#a8998a;--accent:#2c5fe3;--accent2:#6c3fd4;--accent3:#00a98a;--amber:#c87a00}
+.lm nav{background:rgba(250,248,244,.82)}.lm .card,.lm .icard{background:#fff;border-color:rgba(15,10,5,.09)}
+.lm #notes-area{background:#f7f5f0;border-color:rgba(15,10,5,.1);cursor:text}
+.lm .tbtn{background:#f7f5f0;border-color:rgba(15,10,5,.1)}.lm #toast{background:#fff}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="ring"></div><canvas id="bgc"></canvas>
+<div id="toast"><span id="ti">✓</span> <span id="tm"></span></div>
+<nav id="nav">
+  <a class="logo" href="index.html">NEXUS<span>.</span></a>
+  <div class="nr"><a class="back" href="index.html">← Back to All Tools</a><div class="thm" onclick="toggleTheme()">🌙</div></div>
+</nav>
+<div class="w"><main>
+  <div class="hdr">
+    <div class="bc"><a href="index.html">Home</a><s>›</s><a href="index.html">Productivity</a><s>›</s><span style="color:var(--text2)">Quick Notes</span></div>
+    <div class="hero"><div class="ic">🗒️</div><div>
+      <div class="ttl">Quick Notes</div>
+      <div class="sub">Instant notes with auto-save — never lose a thought again</div>
+    </div></div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <div class="tool-left">
+        <button class="tbtn" onclick="insertText('• ')">• List</button>
+        <button class="tbtn" onclick="insertText('✓ ')">✓ Done</button>
+        <button class="tbtn" onclick="insertText('→ ')">→ Arrow</button>
+        <button class="tbtn" onclick="insertText('⭐ ')">⭐ Star</button>
+        <button class="tbtn" onclick="insertText('---\n')">― Divider</button>
+      </div>
+      <div id="saved-ind" class="saved-ind">Auto-saved</div>
+    </div>
+
+    <textarea id="notes-area" placeholder="Start typing your notes here...&#10;&#10;💡 Your notes are automatically saved to your browser — they'll be here next time you visit."></textarea>
+
+    <div class="stats-bar">
+      <div class="stat-item">Words: <span id="wc">0</span></div>
+      <div class="stat-item">Chars: <span id="cc">0</span></div>
+      <div class="stat-item">Lines: <span id="lc">0</span></div>
+    </div>
+
+    <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap">
+      <button class="btn bp" style="flex:1" onclick="copyAll()">📋 Copy All</button>
+      <button class="btn bs bsm" onclick="downloadNote()">⬇ Download .txt</button>
+      <button class="btn bs bsm" style="color:var(--red)" onclick="clearNote()">✕ Clear</button>
+    </div>
+  </div>
+
+  <div class="ig">
+    <div class="icard"><div class="iico">💾</div><div class="ittl">Auto-Saved</div><div class="idesc">Notes are saved automatically to your browser's local storage — no account needed, completely private.</div></div>
+    <div class="icard"><div class="iico">📱</div><div class="ittl">Use Anywhere</div><div class="idesc">Open on desktop or mobile. Your notes persist in the browser — bookmark this page for quick access.</div></div>
+    <div class="icard"><div class="iico">🔒</div><div class="ittl">100% Private</div><div class="idesc">Everything stays on your device. No servers, no tracking, no sign-up. Your thoughts stay yours.</div></div>
+  </div>
+</main></div>
+
+<script>
+let lm=localStorage.getItem('nx-theme')==='light';
+if(lm){document.body.classList.add('lm');document.querySelector('.thm').textContent='☀️';}
+function toggleTheme(){lm=!lm;document.body.classList.toggle('lm',lm);document.querySelector('.thm').textContent=lm?'☀️':'🌙';localStorage.setItem('nx-theme',lm?'light':'dark');}
+
+const cur=document.getElementById('cur'),ring=document.getElementById('ring');
+let cx=0,cy=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;cur.style.left=cx+'px';cur.style.top=cy+'px';});
+(function a(){rx+=(cx-rx)*.12;ry+=(cy-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(a);})();
+document.addEventListener('mousedown',()=>{cur.style.width='6px';cur.style.height='6px'});
+document.addEventListener('mouseup',()=>{cur.style.width='10px';cur.style.height='10px'});
+document.querySelectorAll('button,a').forEach(el=>{el.addEventListener('mouseenter',()=>{ring.style.width='54px';ring.style.height='54px';ring.style.borderColor='rgba(91,141,238,.8)'});el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(91,141,238,.5)'});});
+(function(){const c=document.getElementById('bgc'),x=c.getContext('2d');let W,H,p=[];function r(){W=c.width=innerWidth;H=c.height=innerHeight}r();addEventListener('resize',r);for(let i=0;i<80;i++)p.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.4+.1});function d(){x.clearRect(0,0,W,H);const lm=document.body.classList.contains('lm');p.forEach(pt=>{pt.x+=pt.vx;pt.y+=pt.vy;if(pt.x<0)pt.x=W;if(pt.x>W)pt.x=0;if(pt.y<0)pt.y=H;if(pt.y>H)pt.y=0;x.beginPath();x.arc(pt.x,pt.y,pt.r,0,Math.PI*2);x.fillStyle=`rgba(${lm?'44,95,227':'91,141,238'},${pt.o})`;x.fill();});x.strokeStyle=lm?'rgba(15,10,5,0.03)':'rgba(255,255,255,0.02)';x.lineWidth=1;for(let i=0;i<W;i+=80){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke();}for(let i=0;i<H;i+=80){x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke();}requestAnimationFrame(d);}d();})();
+let _tt;function toast(m,ic='✓'){const t=document.getElementById('toast');document.getElementById('tm').textContent=m;document.getElementById('ti').textContent=ic;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2500);}
+window.addEventListener('scroll',()=>{document.getElementById('nav').style.background=scrollY>50?'rgba(4,5,8,.95)':'rgba(4,5,8,.7)';});
+
+const area=document.getElementById('notes-area');
+const ind=document.getElementById('saved-ind');
+area.value=localStorage.getItem('nx-notes')||'';
+updateStats();
+
+let _saveTimer;
+area.addEventListener('input',()=>{
+  updateStats();
+  ind.textContent='Saving…';ind.className='saved-ind';
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{
+    localStorage.setItem('nx-notes',area.value);
+    ind.textContent='Saved ✓';ind.className='saved-ind ok';
+    setTimeout(()=>{ind.textContent='Auto-saved';ind.className='saved-ind';},2000);
+  },600);
+});
+
+function updateStats(){
+  const v=area.value;
+  document.getElementById('wc').textContent=v.trim()?v.trim().split(/\s+/).length:0;
+  document.getElementById('cc').textContent=v.length;
+  document.getElementById('lc').textContent=v?v.split('\n').length:0;
+}
+
+function insertText(txt){
+  const s=area.selectionStart,e=area.selectionEnd;
+  area.value=area.value.substring(0,s)+txt+area.value.substring(e);
+  area.selectionStart=area.selectionEnd=s+txt.length;
+  area.focus();area.dispatchEvent(new Event('input'));
+}
+
+function copyAll(){
+  navigator.clipboard.writeText(area.value).then(()=>toast('Notes copied!','📋')).catch(()=>{const ta=document.createElement('textarea');ta.value=area.value;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Notes copied!','📋');});
+}
+
+function downloadNote(){
+  const blob=new Blob([area.value],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nexus-notes.txt';a.click();
+  toast('Downloaded!','⬇');
+}
+
+function clearNote(){
+  if(!confirm('Clear all notes? This cannot be undone.'))return;
+  area.value='';localStorage.removeItem('nx-notes');updateStats();
+  toast('Notes cleared','🗑️');
+}
+</script>
+</body></html>

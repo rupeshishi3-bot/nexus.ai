@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Palette Generator — NEXUS Tech Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#040508;--bg2:#080b12;--bg3:#0c1020;--surface:rgba(255,255,255,0.035);--surface2:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;--accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;--red:#f0635a;--amber:#f5a623;--green:#2fd771;--r:12px;--r2:18px;--r3:24px;--fd:'Syne',sans-serif;--fm:'Space Mono',monospace;--fb:'DM Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(4,5,8,0.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.logo{font-family:var(--fd);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none}
+.logo span{-webkit-text-fill-color:var(--accent3)}
+.back{display:inline-flex;align-items:center;gap:.5rem;padding:.4rem .9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:.875rem;text-decoration:none;transition:.2s}
+.back:hover{border-color:var(--accent);color:var(--accent)}
+.wrap{padding-top:64px;display:flex;flex-direction:column;min-height:100vh}
+.hero{padding:3rem 2rem 2rem;text-align:center;background:radial-gradient(ellipse 700px 350px at 50% 0%,rgba(15,232,200,0.08),transparent);border-bottom:1px solid var(--border)}
+.tool-icon{width:72px;height:72px;border-radius:20px;background:rgba(15,232,200,0.1);border:1px solid rgba(15,232,200,0.2);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1rem}
+.badge-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+.badge{display:inline-flex;padding:.28rem .8rem;border-radius:100px;font-size:.78rem;font-weight:500}
+.b-tech{background:rgba(15,232,200,0.12);border:1px solid rgba(15,232,200,0.28);color:#0fe8c8}
+.b-new{background:rgba(47,215,113,0.12);border:1px solid rgba(47,215,113,0.28);color:#2fd771}
+h1{font-family:var(--fd);font-size:2.5rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.5rem}
+.desc{color:var(--text2);font-size:1.05rem;max-width:520px;margin:0 auto 1.5rem}
+.meta{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;font-size:.78rem;color:var(--text3)}
+.tabs-row{padding:1.1rem 2rem;max-width:1000px;margin:0 auto;width:100%}
+.ttabs{display:flex;gap:.35rem;flex-wrap:wrap;padding:.6rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2)}
+.ttab{display:inline-flex;align-items:center;gap:.3rem;padding:.38rem .7rem;border-radius:7px;border:1px solid transparent;color:var(--text2);font-size:.775rem;text-decoration:none;transition:.2s;white-space:nowrap}
+.ttab:hover{background:var(--surface2);border-color:var(--border);color:var(--text)}
+.ttab.active{background:rgba(15,232,200,0.12);border-color:rgba(15,232,200,0.3);color:#0fe8c8}
+.main{flex:1;padding:2rem 2rem 3rem;max-width:860px;margin:0 auto;width:100%}
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.card-head{padding:1.4rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(15,232,200,0.06);display:flex;align-items:center;gap:1rem}
+.ch-icon{width:46px;height:46px;border-radius:13px;background:rgba(15,232,200,0.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.ch-title{font-family:var(--fd);font-size:1.15rem;font-weight:700}
+.ch-sub{font-size:.85rem;color:var(--text2)}
+.card-body{padding:1.6rem}
+.form-label{display:block;font-size:.8rem;font-weight:500;color:var(--text2);margin-bottom:.4rem}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;font-family:var(--fb);outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--accent3);box-shadow:0 0 0 3px rgba(15,232,200,0.1)}
+select.form-input{cursor:pointer}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:520px){.form-row{grid-template-columns:1fr}}
+.btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem 1.5rem;border-radius:10px;font-size:.9rem;font-weight:500;font-family:var(--fb);cursor:pointer;border:none;transition:all .2s;background:linear-gradient(135deg,var(--accent3),var(--accent));color:#030a06;font-weight:700;box-shadow:0 4px 20px rgba(15,232,200,.25)}
+.btn:hover{transform:translateY(-1px)}
+/* PALETTE OUTPUT */
+.palette-strip{display:flex;border-radius:var(--r);overflow:hidden;height:100px;margin:1.5rem 0;cursor:pointer}
+.pal-seg{flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:.6rem;transition:.2s;position:relative}
+.pal-seg:hover{flex:2}
+.pal-hex{font-family:var(--fm);font-size:.68rem;color:rgba(255,255,255,0.8);background:rgba(0,0,0,0.4);padding:.2rem .4rem;border-radius:4px;opacity:0;transition:.2s}
+.pal-seg:hover .pal-hex{opacity:1}
+/* SWATCHES GRID */
+.swatches-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.65rem;margin-top:1rem}
+.swatch-card{border-radius:var(--r);overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:.25s}
+.swatch-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.swatch-color{height:80px}
+.swatch-info{padding:.65rem .75rem;background:var(--bg3)}
+.swatch-hex{font-family:var(--fm);font-size:.82rem;font-weight:700;color:var(--text)}
+.swatch-rgb{font-size:.7rem;color:var(--text3);margin-top:.1rem}
+.copy-chip{font-size:.65rem;padding:.15rem .4rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text3);margin-top:.3rem;display:inline-block;transition:.2s}
+.swatch-card:hover .copy-chip{border-color:var(--accent3);color:var(--accent3)}
+/* CSS EXPORT */
+.css-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem;font-family:var(--fm);font-size:.8rem;line-height:1.8;color:var(--text2);position:relative;margin-top:1.25rem;overflow-x:auto}
+.css-copy{position:absolute;top:.6rem;right:.6rem;padding:.25rem .6rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:.7rem;cursor:pointer;transition:.2s}
+.css-copy:hover{border-color:var(--accent3);color:var(--accent3)}
+/* TYPE PILLS */
+.type-pills{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.tpill{padding:.38rem .85rem;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.82rem;cursor:pointer;transition:.2s}
+.tpill:hover{border-color:var(--border2);color:var(--text)}
+.tpill.active{background:rgba(15,232,200,0.12);border-color:rgba(15,232,200,0.3);color:#0fe8c8;font-weight:500}
+.info-sec{margin-top:2rem;display:flex;flex-direction:column;gap:1rem}
+.ic{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.4rem}
+.ic h3{font-family:var(--fd);font-size:1rem;font-weight:700;margin-bottom:.6rem}
+.ic p{color:var(--text2);font-size:.88rem;line-height:1.75}
+.ot{margin-top:2.5rem}
+.ot h3{font-family:var(--fd);font-size:1rem;font-weight:700;margin-bottom:.9rem;color:var(--text2)}
+.ot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.65rem}
+.oc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1rem;text-decoration:none;color:inherit;transition:.3s;display:block}
+.oc:hover{border-color:var(--border2);transform:translateY(-2px);background:var(--surface2)}
+.oc-icon{font-size:1.3rem;margin-bottom:.35rem}
+.oc-name{font-family:var(--fd);font-size:.83rem;font-weight:700;margin-bottom:.15rem}
+.oc-desc{font-size:.71rem;color:var(--text3)}
+footer{border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;font-size:.8rem;color:var(--text3)}
+footer a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<nav><a href="index.html" class="logo">NEXUS<span>.</span></a><a href="index.html" class="back">← All Tools</a></nav>
+<div class="wrap">
+  <div class="hero">
+    <div class="tool-icon">🎨</div>
+    <div class="badge-row"><span class="badge b-tech">⚙️ Tech</span><span class="badge b-new">✨ New</span></div>
+    <h1>Color Palette Generator</h1>
+    <p class="desc">Generate beautiful complementary, analogous, triadic and monochromatic color palettes. Export as CSS variables instantly.</p>
+    <div class="meta"><span>👁 420K uses</span><span>·</span><span>🎨 5 palette types</span><span>·</span><span>🔒 No data stored</span></div>
+  </div>
+  <div class="tabs-row"><div class="ttabs">
+    <a href="json-formatter.html" class="ttab">{ } JSON</a>
+    <a href="color-palette-generator.html" class="ttab active">🎨 Color Palette</a>
+    <a href="base64-encoder-decoder.html" class="ttab">⚡ Base64</a>
+    <a href="typing-speed-test.html" class="ttab">⌨️ Typing Test</a>
+    <a href="regex-tester.html" class="ttab">🔍 Regex</a>
+    <a href="number-base-converter.html" class="ttab">🔢 Number Base</a>
+    <a href="hash-generator.html" class="ttab"># Hash</a>
+    <a href="random-color-generator.html" class="ttab">🎨 Rnd Color</a>
+    <a href="text-diff-checker.html" class="ttab">⟺ Text Diff</a>
+  </div></div>
+  <div class="main">
+    <div class="card">
+      <div class="card-head"><div class="ch-icon">🎨</div><div><div class="ch-title">Color Palette Generator</div><div class="ch-sub">Complementary · Analogous · Triadic · Monochromatic · Shades</div></div></div>
+      <div class="card-body">
+        <div class="form-row" style="margin-bottom:1.1rem">
+          <div>
+            <label class="form-label">Base Color</label>
+            <div style="display:flex;gap:.5rem">
+              <input type="color" id="base-color" value="#5b8dee" style="width:50px;height:42px;border:1px solid var(--border);border-radius:8px;background:none;cursor:pointer;flex-shrink:0" oninput="syncHex()">
+              <input class="form-input" id="base-hex" value="#5b8dee" placeholder="#rrggbb" oninput="syncPicker()" style="font-family:var(--fm)">
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Palette Size</label>
+            <select class="form-input" id="pal-size" onchange="genPalette()">
+              <option value="5">5 Colors</option>
+              <option value="7" selected>7 Colors</option>
+              <option value="9">9 Colors</option>
+            </select>
+          </div>
+        </div>
+        <!-- TYPE PILLS -->
+        <div class="type-pills" id="type-pills">
+          <button class="tpill active" data-type="complementary" onclick="setType('complementary',this)">Complementary</button>
+          <button class="tpill" data-type="analogous"     onclick="setType('analogous',this)">Analogous</button>
+          <button class="tpill" data-type="triadic"       onclick="setType('triadic',this)">Triadic</button>
+          <button class="tpill" data-type="monochromatic" onclick="setType('monochromatic',this)">Monochromatic</button>
+          <button class="tpill" data-type="shades"        onclick="setType('shades',this)">Shades</button>
+        </div>
+        <button class="btn" onclick="genPalette()">🎨 Generate Palette</button>
+        <!-- STRIP -->
+        <div class="palette-strip" id="pal-strip"></div>
+        <!-- SWATCHES -->
+        <div class="swatches-grid" id="swatches-grid"></div>
+        <!-- CSS EXPORT -->
+        <div class="css-box" id="css-box">
+          <button class="css-copy" onclick="copyCss()">Copy CSS</button>
+          <div id="css-content"></div>
+        </div>
+      </div>
+    </div>
+    <div class="info-sec">
+      <div class="ic"><h3>🎨 Color Harmony Guide</h3><p><strong>Complementary</strong> — opposite on the color wheel, high contrast. <strong>Analogous</strong> — adjacent colors, harmonious and calm. <strong>Triadic</strong> — 3 evenly spaced hues, vibrant and balanced. <strong>Monochromatic</strong> — same hue, varying lightness, elegant and cohesive.</p></div>
+      <div class="ic"><h3>💡 Click any swatch to copy its hex code</h3><p>The CSS export section gives you ready-to-use CSS custom properties (variables) you can paste directly into your stylesheet. Hover over swatches in the strip for a larger preview.</p></div>
+    </div>
+    <div class="ot"><h3>Other Tech Tools</h3><div class="ot-grid">
+      <a href="random-color-generator.html" class="oc"><div class="oc-icon">🎲</div><div class="oc-name">Random Color</div><div class="oc-desc">Instant random hex colors</div></a>
+      <a href="json-formatter.html" class="oc"><div class="oc-icon">{ }</div><div class="oc-name">JSON Formatter</div><div class="oc-desc">Beautify & validate JSON</div></a>
+      <a href="base64-encoder-decoder.html" class="oc"><div class="oc-icon">⚡</div><div class="oc-name">Base64</div><div class="oc-desc">Encode & decode</div></a>
+      <a href="text-diff-checker.html" class="oc"><div class="oc-icon">⟺</div><div class="oc-name">Text Diff</div><div class="oc-desc">Compare two texts</div></a>
+    </div></div>
+  </div>
+  <footer>© 2025 <a href="index.html">NEXUS Tools</a> · Free Tech Tools · No account required · Made with ❤️ in India 🇮🇳</footer>
+</div>
+<script>
+let currentType='complementary';
+function hexToHSL(hex){let r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;const max=Math.max(r,g,b),min=Math.min(r,g,b);let h,s,l=(max+min)/2;if(max===min){h=s=0;}else{const d=max-min;s=l>0.5?d/(2-max-min):d/(max+min);switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}h/=6;}return[h*360,s*100,l*100];}
+function hslToHex(h,s,l){h/=360;s/=100;l/=100;let r,g,b;if(s===0){r=g=b=l;}else{const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}return'#'+[r,g,b].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');}
+function hexToRGB(hex){return{r:parseInt(hex.slice(1,3),16),g:parseInt(hex.slice(3,5),16),b:parseInt(hex.slice(5,7),16)};}
+function setType(t,btn){currentType=t;document.querySelectorAll('.tpill').forEach(p=>p.classList.remove('active'));btn.classList.add('active');genPalette();}
+function syncHex(){document.getElementById('base-hex').value=document.getElementById('base-color').value;genPalette();}
+function syncPicker(){const h=document.getElementById('base-hex').value;if(/^#[0-9A-Fa-f]{6}$/.test(h)){document.getElementById('base-color').value=h;genPalette();}}
+
+function genPalette(){
+  const hex=document.getElementById('base-color').value;
+  const n=parseInt(document.getElementById('pal-size').value);
+  const [h,s,l]=hexToHSL(hex);
+  let colors=[];
+  const t=currentType;
+  if(t==='complementary'){const step=180/Math.floor(n/2);colors=[hex];for(let i=1;i<n;i++)colors.push(i%2===0?hslToHex((h+180+step*Math.floor(i/2))%360,s,l):hslToHex((h+step*Math.ceil(i/2))%360,s,l));}
+  else if(t==='analogous'){const step=30/(Math.floor(n/2));colors=[];for(let i=Math.floor(n/2);i>0;i--)colors.push(hslToHex((h-step*i+360)%360,s,l));colors.push(hex);for(let i=1;i<=Math.ceil(n/2);i++)colors.push(hslToHex((h+step*i)%360,s,l));colors=colors.slice(0,n);}
+  else if(t==='triadic'){colors=[];const third=360/3;for(let i=0;i<n;i++){const idx=i%3;const base=(h+idx*third)%360;const lightnessShift=(Math.floor(i/3))*15;colors.push(hslToHex(base,s,Math.min(90,Math.max(10,l+lightnessShift-15)));}}
+  else if(t==='monochromatic'){const lStep=70/(n-1);colors=[];for(let i=0;i<n;i++)colors.push(hslToHex(h,s,15+lStep*i));}
+  else{const lStep=80/(n-1);colors=[];for(let i=0;i<n;i++)colors.push(hslToHex(h,s,10+lStep*i));}
+
+  // strip
+  document.getElementById('pal-strip').innerHTML=colors.map(c=>`<div class="pal-seg" style="background:${c}" onclick="navigator.clipboard.writeText('${c}').then(()=>showCopied('${c}'))"><span class="pal-hex">${c.toUpperCase()}</span></div>`).join('');
+  // swatches
+  document.getElementById('swatches-grid').innerHTML=colors.map((c,i)=>{const {r,g,b}=hexToRGB(c);return`<div class="swatch-card" onclick="navigator.clipboard.writeText('${c}').then(()=>showCopied('${c}'))"><div class="swatch-color" style="background:${c}"></div><div class="swatch-info"><div class="swatch-hex">${c.toUpperCase()}</div><div class="swatch-rgb">rgb(${r}, ${g}, ${b})</div><span class="copy-chip">Click to copy</span></div></div>`;}).join('');
+  // CSS
+  const css=`:root {\n${colors.map((c,i)=>`  --color-${i+1}: ${c.toUpperCase()};`).join('\n')}\n}`;
+  document.getElementById('css-content').textContent=css;
+}
+
+function showCopied(hex){const el=document.createElement('div');el.textContent='✓ Copied '+hex;el.style.cssText='position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:rgba(47,215,113,0.9);color:#000;padding:.5rem 1rem;border-radius:8px;font-size:.85rem;font-weight:600;z-index:9999;pointer-events:none';document.body.appendChild(el);setTimeout(()=>el.remove(),1500);}
+function copyCss(){navigator.clipboard.writeText(document.getElementById('css-content').textContent).then(()=>showCopied('CSS variables'));}
+genPalette();
+</script>
+</body>
+</html>

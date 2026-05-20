@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text Case Converter — NEXUS Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#040508;--bg2:#080b12;--bg3:#0c1020;
+  --surface:rgba(255,255,255,0.035);--surface2:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;
+  --accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;
+  --green:#2fd771;--amber:#f5a623;--red:#f0635a;
+  --font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;overflow-x:hidden;cursor:none}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:width .15s,height .15s}
+#cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(91,141,238,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.45}
+.site-wrap{position:relative;z-index:1;min-height:100vh}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,0.8);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;letter-spacing:-0.02em}
+.nav-logo span{-webkit-text-fill-color:var(--accent3)}
+.nav-center{font-family:var(--font-display);font-size:0.875rem;font-weight:700;color:var(--text3)}
+.nav-back{display:flex;align-items:center;gap:0.4rem;padding:0.4rem 0.9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.85rem;text-decoration:none;cursor:none;transition:.2s}
+.nav-back:hover{border-color:var(--accent);color:var(--accent)}
+.page-hero{padding:110px 2rem 32px;text-align:center}
+.tool-chip{display:inline-flex;align-items:center;gap:0.5rem;padding:0.3rem 0.9rem;border-radius:100px;background:rgba(47,215,113,0.1);border:1px solid rgba(47,215,113,0.25);color:var(--green);font-size:0.8rem;font-weight:500;margin-bottom:1.1rem}
+.page-title{font-family:var(--font-display);font-size:clamp(2rem,5vw,3rem);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin-bottom:0.5rem}
+.page-title span{background:linear-gradient(135deg,var(--green),var(--accent3),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.page-sub{color:var(--text2);font-size:0.95rem;font-weight:300;max-width:460px;margin:0 auto}
+.main{max-width:760px;margin:0 auto;padding:0 2rem 5rem}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:24px;overflow:hidden;box-shadow:0 32px 64px rgba(0,0,0,0.4);margin-bottom:1.25rem}
+.card-header{padding:1.25rem 1.75rem;background:linear-gradient(135deg,rgba(47,215,113,0.07),transparent);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.75rem}
+.c-icon{width:44px;height:44px;border-radius:12px;background:rgba(47,215,113,0.12);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.c-title{font-family:var(--font-display);font-size:1rem;font-weight:700}
+.c-sub{font-size:0.8rem;color:var(--text2);margin-top:0.1rem}
+.card-body{padding:1.75rem}
+
+/* INPUT AREA */
+.textarea-wrap{position:relative;margin-bottom:1.25rem}
+.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;transition:border-color .2s,box-shadow .2s;cursor:none;resize:vertical;min-height:130px;line-height:1.65}
+.form-textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(47,215,113,0.1)}
+.form-textarea::placeholder{color:var(--text3)}
+.char-count{position:absolute;bottom:0.6rem;right:0.75rem;font-size:0.7rem;color:var(--text3);font-family:var(--font-mono);pointer-events:none}
+
+/* CASE GRID */
+.case-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:0.6rem;margin-bottom:1.25rem}
+.case-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.75rem 0.9rem;cursor:none;transition:all .2s;text-align:left;display:flex;flex-direction:column;gap:0.25rem}
+.case-btn:hover,.case-btn.active{background:var(--surface2);border-color:var(--green);box-shadow:0 0 16px rgba(47,215,113,0.12)}
+.case-name{font-size:0.8rem;font-weight:700;font-family:var(--font-display);color:var(--text)}
+.case-example{font-size:0.7rem;color:var(--text3);font-family:var(--font-mono)}
+
+/* OUTPUT */
+.output-card{background:rgba(47,215,113,0.05);border:1px solid rgba(47,215,113,0.18);border-radius:14px;padding:1.25rem;position:relative}
+.output-label{font-size:0.72rem;color:var(--green);font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.6rem;display:flex;align-items:center;justify-content:space-between}
+.output-text{font-size:0.9375rem;color:var(--text);line-height:1.7;min-height:48px;word-break:break-word;white-space:pre-wrap}
+.output-text.empty{color:var(--text3);font-style:italic}
+.copy-row{display:flex;gap:0.6rem;margin-top:1rem;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.45rem;padding:0.6rem 1.1rem;border-radius:9px;font-size:0.85rem;font-weight:600;font-family:var(--font-body);cursor:none;transition:all .2s;border:none;outline:none}
+.btn-copy{background:linear-gradient(135deg,var(--green),var(--accent3));color:#000;font-weight:700}
+.btn-copy:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(47,215,113,0.35)}
+.btn-clear{background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
+.btn-clear:hover{border-color:var(--red);color:var(--red)}
+.btn-swap{background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
+.btn-swap:hover{border-color:var(--accent);color:var(--accent)}
+
+/* STATS */
+.stats-row{display:flex;gap:1.5rem;flex-wrap:wrap;padding:1rem 0;border-top:1px solid var(--border);margin-top:1.25rem}
+.stat-item{text-align:center}
+.stat-val{font-family:var(--font-display);font-size:1.25rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-lbl{font-size:0.7rem;color:var(--text3);margin-top:0.1rem;text-transform:uppercase;letter-spacing:0.06em}
+
+/* ALL CONVERSIONS */
+.all-wrap{margin-top:1.25rem}
+.all-title{font-size:0.75rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem}
+.all-grid{display:flex;flex-direction:column;gap:0.5rem}
+.all-item{display:flex;align-items:center;background:var(--bg3);border-radius:10px;overflow:hidden;border:1px solid var(--border);transition:.2s}
+.all-item:hover{border-color:var(--border2)}
+.all-label{font-size:0.72rem;font-weight:700;color:var(--text3);padding:0.7rem 0.9rem;background:var(--surface);border-right:1px solid var(--border);min-width:130px;font-family:var(--font-display);flex-shrink:0}
+.all-value{flex:1;padding:0.7rem 0.9rem;font-size:0.875rem;color:var(--text);word-break:break-all;cursor:none}
+.all-copy{padding:0.7rem 0.75rem;font-size:0.7rem;color:var(--text3);cursor:none;transition:.2s;border-left:1px solid var(--border);white-space:nowrap;background:none;border-top:none;border-right:none;border-bottom:none;font-family:var(--font-body)}
+.all-copy:hover{color:var(--green);background:rgba(47,215,113,0.06)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .7s ease both}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="bg-canvas"></canvas>
+
+<div class="site-wrap">
+<nav>
+  <a href="index.html" class="nav-logo">NEXUS<span>.</span></a>
+  <span class="nav-center">Productivity Tools</span>
+  <a href="index.html" class="nav-back">← All Tools</a>
+</nav>
+
+<div class="page-hero fade-up">
+  <div class="tool-chip">🔡 Productivity</div>
+  <h1 class="page-title"><span>Text Case Converter</span></h1>
+  <p class="page-sub">Instantly convert any text between UPPERCASE, lowercase, Title Case, camelCase, snake_case, and 6 more formats.</p>
+</div>
+
+<div class="main fade-up" style="animation-delay:.1s">
+
+  <!-- MAIN CONVERTER CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="c-icon">🔡</div>
+      <div>
+        <div class="c-title">Text Case Converter</div>
+        <div class="c-sub">Type or paste text, then choose a conversion</div>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <!-- INPUT -->
+      <div class="textarea-wrap">
+        <textarea class="form-textarea" id="tc-input" placeholder="Type or paste your text here…" oninput="onInput()" spellcheck="false"></textarea>
+        <span class="char-count" id="tc-charcount">0 chars</span>
+      </div>
+
+      <!-- CASE BUTTONS -->
+      <div class="case-grid">
+        <button class="case-btn active" id="btn-upper" onclick="setCase('upper',this)">
+          <span class="case-name">UPPERCASE</span>
+          <span class="case-example">HELLO WORLD</span>
+        </button>
+        <button class="case-btn" id="btn-lower" onclick="setCase('lower',this)">
+          <span class="case-name">lowercase</span>
+          <span class="case-example">hello world</span>
+        </button>
+        <button class="case-btn" id="btn-title" onclick="setCase('title',this)">
+          <span class="case-name">Title Case</span>
+          <span class="case-example">Hello World</span>
+        </button>
+        <button class="case-btn" id="btn-sentence" onclick="setCase('sentence',this)">
+          <span class="case-name">Sentence case</span>
+          <span class="case-example">Hello world here</span>
+        </button>
+        <button class="case-btn" id="btn-camel" onclick="setCase('camel',this)">
+          <span class="case-name">camelCase</span>
+          <span class="case-example">helloWorldHere</span>
+        </button>
+        <button class="case-btn" id="btn-pascal" onclick="setCase('pascal',this)">
+          <span class="case-name">PascalCase</span>
+          <span class="case-example">HelloWorldHere</span>
+        </button>
+        <button class="case-btn" id="btn-snake" onclick="setCase('snake',this)">
+          <span class="case-name">snake_case</span>
+          <span class="case-example">hello_world_here</span>
+        </button>
+        <button class="case-btn" id="btn-kebab" onclick="setCase('kebab',this)">
+          <span class="case-name">kebab-case</span>
+          <span class="case-example">hello-world-here</span>
+        </button>
+        <button class="case-btn" id="btn-constant" onclick="setCase('constant',this)">
+          <span class="case-name">CONSTANT_CASE</span>
+          <span class="case-example">HELLO_WORLD_HERE</span>
+        </button>
+        <button class="case-btn" id="btn-dot" onclick="setCase('dot',this)">
+          <span class="case-name">dot.case</span>
+          <span class="case-example">hello.world.here</span>
+        </button>
+        <button class="case-btn" id="btn-alternate" onclick="setCase('alternate',this)">
+          <span class="case-name">aLtErNaTe</span>
+          <span class="case-example">hElLo WoRlD</span>
+        </button>
+        <button class="case-btn" id="btn-inverse" onclick="setCase('inverse',this)">
+          <span class="case-name">iNVERSE cASE</span>
+          <span class="case-example">hELLO wORLD</span>
+        </button>
+      </div>
+
+      <!-- OUTPUT -->
+      <div class="output-card">
+        <div class="output-label">
+          <span id="tc-mode-label">UPPERCASE</span>
+          <span id="tc-out-count" style="color:var(--text3);font-size:0.7rem;font-weight:400"></span>
+        </div>
+        <div class="output-text empty" id="tc-output">Converted text will appear here…</div>
+        <div class="copy-row">
+          <button class="btn btn-copy" onclick="copyOutput()">📋 Copy Result</button>
+          <button class="btn btn-swap" onclick="swapInputOutput()">⇅ Use as Input</button>
+          <button class="btn btn-clear" onclick="clearAll()">✕ Clear</button>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-item"><div class="stat-val" id="st-words">0</div><div class="stat-lbl">Words</div></div>
+        <div class="stat-item"><div class="stat-val" id="st-chars">0</div><div class="stat-lbl">Characters</div></div>
+        <div class="stat-item"><div class="stat-val" id="st-chars-ns">0</div><div class="stat-lbl">No Spaces</div></div>
+        <div class="stat-item"><div class="stat-val" id="st-lines">0</div><div class="stat-lbl">Lines</div></div>
+        <div class="stat-item"><div class="stat-val" id="st-sentences">0</div><div class="stat-lbl">Sentences</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ALL CONVERSIONS CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="c-icon">📋</div>
+      <div>
+        <div class="c-title">All Conversions at Once</div>
+        <div class="c-sub">See every format side by side</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="all-grid" id="all-grid">
+        <div style="color:var(--text3);font-size:0.875rem;padding:0.5rem 0">Type some text above to see all conversions here.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ── CURSOR ──
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let cx=0,cy=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;cur.style.left=cx+'px';cur.style.top=cy+'px'});
+(function loop(){rx+=(cx-rx)*.12;ry+=(cy-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop)})();
+document.addEventListener('mousedown',()=>{cur.style.width='6px';cur.style.height='6px'});
+document.addEventListener('mouseup',()=>{cur.style.width='10px';cur.style.height='10px'});
+document.querySelectorAll('button,a').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ring.style.width='52px';ring.style.height='52px';ring.style.borderColor='rgba(47,215,113,0.8)'});
+  el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(91,141,238,0.5)'});
+});
+
+// ── CANVAS ──
+(function(){
+  const c=document.getElementById('bg-canvas'),ctx=c.getContext('2d');
+  let W,H,P=[];
+  const resize=()=>{W=c.width=window.innerWidth;H=c.height=window.innerHeight};
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<70;i++)P.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.35+.08});
+  (function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.018)';ctx.lineWidth=1;
+    for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    P.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(47,215,113,${p.o})`;ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  })();
+})();
+
+// ── CASE CONVERSION LOGIC ──
+let currentMode='upper';
+
+const CONVERTERS={
+  upper:  (t)=>t.toUpperCase(),
+  lower:  (t)=>t.toLowerCase(),
+  title:  (t)=>t.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()),
+  sentence:(t)=>t.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g,c=>c.toUpperCase()),
+  camel:  (t)=>{const w=words(t);return w.map((w,i)=>i===0?w.toLowerCase():capitalize(w)).join('')},
+  pascal: (t)=>words(t).map(capitalize).join(''),
+  snake:  (t)=>words(t).map(w=>w.toLowerCase()).join('_'),
+  kebab:  (t)=>words(t).map(w=>w.toLowerCase()).join('-'),
+  constant:(t)=>words(t).map(w=>w.toUpperCase()).join('_'),
+  dot:    (t)=>words(t).map(w=>w.toLowerCase()).join('.'),
+  alternate:(t)=>t.split('').map((c,i)=>i%2===0?c.toLowerCase():c.toUpperCase()).join(''),
+  inverse:(t)=>t.split('').map(c=>c===c.toUpperCase()?c.toLowerCase():c.toUpperCase()).join(''),
+};
+
+const MODE_LABELS={
+  upper:'UPPERCASE',lower:'lowercase',title:'Title Case',sentence:'Sentence case',
+  camel:'camelCase',pascal:'PascalCase',snake:'snake_case',kebab:'kebab-case',
+  constant:'CONSTANT_CASE',dot:'dot.case',alternate:'aLtErNaTe',inverse:'iNVERSE cASE',
+};
+
+function words(str){
+  return str.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/[-_.,!?;:]+/g,' ').split(/\s+/).filter(Boolean);
+}
+function capitalize(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();}
+
+function convert(text,mode){
+  if(!text)return '';
+  return CONVERTERS[mode]?CONVERTERS[mode](text):text;
+}
+
+function setCase(mode,btn){
+  currentMode=mode;
+  document.querySelectorAll('.case-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  updateOutput();
+}
+
+function onInput(){
+  const text=document.getElementById('tc-input').value;
+  document.getElementById('tc-charcount').textContent=text.length+' chars';
+  updateStats(text);
+  updateOutput();
+  updateAllGrid(text);
+}
+
+function updateOutput(){
+  const text=document.getElementById('tc-input').value;
+  const out=document.getElementById('tc-output');
+  const result=convert(text,currentMode);
+  if(!text){
+    out.textContent='Converted text will appear here…';
+    out.classList.add('empty');
+    document.getElementById('tc-out-count').textContent='';
+  } else {
+    out.textContent=result;
+    out.classList.remove('empty');
+    document.getElementById('tc-out-count').textContent=result.length+' chars';
+  }
+  document.getElementById('tc-mode-label').textContent=MODE_LABELS[currentMode]||currentMode;
+}
+
+function updateStats(text){
+  const words_=text.trim()?text.trim().split(/\s+/).length:0;
+  document.getElementById('st-words').textContent=words_;
+  document.getElementById('st-chars').textContent=text.length;
+  document.getElementById('st-chars-ns').textContent=text.replace(/\s/g,'').length;
+  document.getElementById('st-lines').textContent=text?text.split('\n').length:0;
+  document.getElementById('st-sentences').textContent=text.split(/[.!?]+/).filter(s=>s.trim()).length;
+}
+
+function updateAllGrid(text){
+  const grid=document.getElementById('all-grid');
+  if(!text){
+    grid.innerHTML='<div style="color:var(--text3);font-size:0.875rem;padding:0.5rem 0">Type some text above to see all conversions here.</div>';
+    return;
+  }
+  const modes=[
+    ['UPPERCASE','upper'],['lowercase','lower'],['Title Case','title'],
+    ['Sentence case','sentence'],['camelCase','camel'],['PascalCase','pascal'],
+    ['snake_case','snake'],['kebab-case','kebab'],['CONSTANT_CASE','constant'],
+    ['dot.case','dot'],['aLtErNaTe','alternate'],['iNVERSE cASE','inverse'],
+  ];
+  grid.innerHTML=modes.map(([label,mode])=>{
+    const val=convert(text,mode);
+    const safe=val.replace(/'/g,'&#39;');
+    return `<div class="all-item">
+      <div class="all-label">${label}</div>
+      <div class="all-value">${val}</div>
+      <button class="all-copy" onclick="copyText('${safe}','${label}')">Copy</button>
+    </div>`;
+  }).join('');
+}
+
+function copyOutput(){
+  const text=document.getElementById('tc-output').textContent;
+  if(!text||text==='Converted text will appear here…')return;
+  navigator.clipboard.writeText(text).then(()=>showToast('Copied!'));
+}
+function swapInputOutput(){
+  const out=document.getElementById('tc-output').textContent;
+  if(!out||out==='Converted text will appear here…')return;
+  document.getElementById('tc-input').value=out;
+  onInput();
+}
+function clearAll(){
+  document.getElementById('tc-input').value='';
+  onInput();
+}
+function copyText(text,label){
+  navigator.clipboard.writeText(text).then(()=>showToast(label+' copied!'));
+}
+
+// Simple toast
+let toastTimer;
+function showToast(msg){
+  let t=document.getElementById('nx-toast');
+  if(!t){t=document.createElement('div');t.id='nx-toast';t.style.cssText='position:fixed;bottom:2rem;right:2rem;z-index:999;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:0.75rem 1.1rem;font-size:0.875rem;color:var(--text);box-shadow:0 16px 32px rgba(0,0,0,0.4);transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none';document.body.appendChild(t);}
+  t.textContent='📋  '+msg;
+  t.style.transform='translateY(0)';t.style.opacity='1';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.style.transform='translateY(80px)';t.style.opacity='0';},2200);
+}
+</script>
+</body>
+</html>

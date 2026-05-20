@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON Formatter — NEXUS Tech Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#040508;--bg2:#080b12;--bg3:#0c1020;--surface:rgba(255,255,255,0.035);--surface2:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;--accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;--red:#f0635a;--amber:#f5a623;--green:#2fd771;--r:12px;--r2:18px;--r3:24px;--fd:'Syne',sans-serif;--fm:'Space Mono',monospace;--fb:'DM Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(4,5,8,0.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.logo{font-family:var(--fd);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none}
+.logo span{-webkit-text-fill-color:var(--accent3)}
+.back{display:inline-flex;align-items:center;gap:.5rem;padding:.4rem .9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:.875rem;text-decoration:none;transition:.2s}
+.back:hover{border-color:var(--accent);color:var(--accent)}
+.wrap{padding-top:64px;display:flex;flex-direction:column;min-height:100vh}
+.hero{padding:3rem 2rem 2rem;text-align:center;background:radial-gradient(ellipse 700px 350px at 50% 0%,rgba(91,141,238,0.09),transparent);border-bottom:1px solid var(--border)}
+.tool-icon{width:72px;height:72px;border-radius:20px;background:rgba(91,141,238,0.1);border:1px solid rgba(91,141,238,0.2);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1rem;font-family:var(--fm);font-weight:700}
+.badge-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+.badge{display:inline-flex;padding:.28rem .8rem;border-radius:100px;font-size:.78rem;font-weight:500}
+.b-tech{background:rgba(91,141,238,0.12);border:1px solid rgba(91,141,238,0.28);color:#5b8dee}
+.b-hot{background:rgba(240,99,90,0.12);border:1px solid rgba(240,99,90,0.28);color:#f0635a}
+.b-new{background:rgba(47,215,113,0.12);border:1px solid rgba(47,215,113,0.28);color:#2fd771}
+h1{font-family:var(--fd);font-size:2.5rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.5rem}
+.desc{color:var(--text2);font-size:1.05rem;max-width:520px;margin:0 auto 1.5rem}
+.meta{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;font-size:.78rem;color:var(--text3)}
+/* TABS */
+.tabs-row{padding:1.1rem 2rem;max-width:1000px;margin:0 auto;width:100%}
+.ttabs{display:flex;gap:.35rem;flex-wrap:wrap;padding:.6rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2)}
+.ttab{display:inline-flex;align-items:center;gap:.3rem;padding:.38rem .7rem;border-radius:7px;border:1px solid transparent;color:var(--text2);font-size:.775rem;text-decoration:none;transition:.2s;white-space:nowrap}
+.ttab:hover{background:var(--surface2);border-color:var(--border);color:var(--text)}
+.ttab.active{background:rgba(91,141,238,0.12);border-color:rgba(91,141,238,0.3);color:#5b8dee}
+/* MAIN */
+.main{flex:1;padding:2rem 2rem 3rem;max-width:900px;margin:0 auto;width:100%}
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.card-head{padding:1.4rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(91,141,238,0.06);display:flex;align-items:center;gap:1rem}
+.ch-icon{width:46px;height:46px;border-radius:13px;background:rgba(91,141,238,0.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-family:var(--fm);font-weight:700;flex-shrink:0}
+.ch-title{font-family:var(--fd);font-size:1.15rem;font-weight:700}
+.ch-sub{font-size:.85rem;color:var(--text2)}
+.card-body{padding:1.6rem}
+/* FORM */
+.form-label{display:block;font-size:.8rem;font-weight:500;color:var(--text2);margin-bottom:.4rem;letter-spacing:.01em}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;color:var(--text);font-size:.9rem;font-family:var(--fb);outline:none;transition:border-color .2s,box-shadow .2s}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,0.12)}
+textarea.form-input{resize:vertical;font-family:var(--fm);font-size:.85rem;line-height:1.6;min-height:160px}
+/* 2-COL LAYOUT */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+/* TOOLBAR */
+.toolbar{display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0}
+.tbtn{display:inline-flex;align-items:center;gap:.35rem;padding:.5rem 1rem;border-radius:8px;font-size:.855rem;font-weight:500;font-family:var(--fb);cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2);transition:.2s}
+.tbtn:hover{border-color:var(--border2);color:var(--text)}
+.tbtn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;box-shadow:0 4px 16px rgba(91,141,238,.25)}
+.tbtn-p:hover{transform:translateY(-1px)}
+/* STATUS */
+.status{font-size:.82rem;margin-top:.5rem;padding:.5rem .75rem;border-radius:8px}
+.status.ok{background:rgba(47,215,113,0.1);color:var(--green);border:1px solid rgba(47,215,113,0.2)}
+.status.err{background:rgba(240,99,90,0.1);color:var(--red);border:1px solid rgba(240,99,90,0.2)}
+/* OUTPUT */
+.out-wrap{position:relative;margin-top:.75rem}
+.out-copy{position:absolute;top:.6rem;right:.6rem;padding:.3rem .65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:.72rem;cursor:pointer;transition:.2s}
+.out-copy:hover{border-color:var(--accent);color:var(--accent)}
+/* INFO */
+.info-sec{margin-top:2rem;display:flex;flex-direction:column;gap:1rem}
+.ic{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.4rem}
+.ic h3{font-family:var(--fd);font-size:1rem;font-weight:700;margin-bottom:.6rem}
+.ic p{color:var(--text2);font-size:.88rem;line-height:1.75}
+.hl{background:rgba(91,141,238,0.07);border:1px solid rgba(91,141,238,0.18);border-radius:8px;padding:.85rem 1rem;margin:.65rem 0;color:var(--text2);font-size:.85rem;line-height:1.7;font-family:var(--fm)}
+/* OTHER */
+.ot{margin-top:2.5rem}
+.ot h3{font-family:var(--fd);font-size:1rem;font-weight:700;margin-bottom:.9rem;color:var(--text2)}
+.ot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.65rem}
+.oc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1rem;text-decoration:none;color:inherit;transition:.3s;display:block}
+.oc:hover{border-color:var(--border2);transform:translateY(-2px);background:var(--surface2)}
+.oc-icon{font-size:1.3rem;margin-bottom:.35rem}
+.oc-name{font-family:var(--fd);font-size:.83rem;font-weight:700;margin-bottom:.15rem}
+.oc-desc{font-size:.71rem;color:var(--text3)}
+footer{border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;font-size:.8rem;color:var(--text3)}
+footer a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="logo">NEXUS<span>.</span></a>
+  <a href="index.html" class="back">← All Tools</a>
+</nav>
+<div class="wrap">
+  <div class="hero">
+    <div class="tool-icon">{ }</div>
+    <div class="badge-row"><span class="badge b-tech">⚙️ Tech</span><span class="badge b-hot">🔥 HOT</span></div>
+    <h1>JSON Formatter</h1>
+    <p class="desc">Format, beautify, minify and validate JSON data instantly. Syntax-check your JSON with clear error messages.</p>
+    <div class="meta"><span>👁 890K uses</span><span>·</span><span>⚡ Real-time</span><span>·</span><span>🔒 No data stored</span></div>
+  </div>
+  <div class="tabs-row"><div class="ttabs">
+    <a href="json-formatter.html" class="ttab active">{ } JSON</a>
+    <a href="color-palette-generator.html" class="ttab">🎨 Color Palette</a>
+    <a href="base64-encoder-decoder.html" class="ttab">⚡ Base64</a>
+    <a href="typing-speed-test.html" class="ttab">⌨️ Typing Test</a>
+    <a href="regex-tester.html" class="ttab">🔍 Regex</a>
+    <a href="number-base-converter.html" class="ttab">🔢 Number Base</a>
+    <a href="hash-generator.html" class="ttab"># Hash</a>
+    <a href="random-color-generator.html" class="ttab">🎨 Rnd Color</a>
+    <a href="text-diff-checker.html" class="ttab">⟺ Text Diff</a>
+  </div></div>
+  <div class="main">
+    <div class="card">
+      <div class="card-head"><div class="ch-icon">{ }</div><div><div class="ch-title">JSON Formatter & Validator</div><div class="ch-sub">Beautify · Minify · Validate · Tree view</div></div></div>
+      <div class="card-body">
+        <div class="two-col">
+          <div>
+            <label class="form-label">Input JSON</label>
+            <textarea class="form-input" id="json-in" style="min-height:280px" oninput="formatJSON()" placeholder='{"key":"value","arr":[1,2,3]}'>{"name":"Nexus","version":"2.0","tools":["EMI","SIP","BMI","GST"],"users":2400000,"active":true}</textarea>
+            <div class="toolbar">
+              <button class="tbtn tbtn-p" onclick="formatJSON()">✨ Beautify</button>
+              <button class="tbtn" onclick="minifyJSON()">📦 Minify</button>
+              <button class="tbtn" onclick="validateJSON()">✅ Validate</button>
+              <button class="tbtn" onclick="clearJSON()">🗑️ Clear</button>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Output</label>
+            <div class="out-wrap">
+              <textarea class="form-input" id="json-out" style="min-height:280px" readonly></textarea>
+              <button class="out-copy" onclick="copyOut()">Copy</button>
+            </div>
+            <div id="json-status" style="margin-top:.6rem"></div>
+          </div>
+        </div>
+        <!-- TREE VIEW -->
+        <div id="tree-wrap" style="margin-top:1.25rem;display:none">
+          <div style="font-size:.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.6rem">Tree View</div>
+          <div id="json-tree" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem;font-family:var(--fm);font-size:.82rem;line-height:1.9;overflow-x:auto;max-height:300px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+    <div class="info-sec">
+      <div class="ic"><h3>📖 What is JSON?</h3><p>JSON (JavaScript Object Notation) is a lightweight data-interchange format. It's human-readable and easy for machines to parse. JSON supports strings, numbers, booleans, null, arrays and objects.</p>
+      <div class="hl">{"string":"hello","number":42,"bool":true,"null":null,"array":[1,2,3],"object":{"nested":"value"}}</div></div>
+      <div class="ic"><h3>⚠️ Common JSON Errors</h3><p>Trailing commas (not allowed in JSON), single-quoted strings (must use double quotes), unquoted keys, and comments (JSON doesn't support them) are the most frequent mistakes. This tool highlights the exact error position.</p></div>
+    </div>
+    <div class="ot"><h3>Other Tech Tools</h3><div class="ot-grid">
+      <a href="base64-encoder-decoder.html" class="oc"><div class="oc-icon">⚡</div><div class="oc-name">Base64</div><div class="oc-desc">Encode & decode instantly</div></a>
+      <a href="regex-tester.html" class="oc"><div class="oc-icon">🔍</div><div class="oc-name">Regex Tester</div><div class="oc-desc">Live match highlighting</div></a>
+      <a href="hash-generator.html" class="oc"><div class="oc-icon">#</div><div class="oc-name">Hash Generator</div><div class="oc-desc">SHA-1, SHA-256, SHA-512</div></a>
+      <a href="text-diff-checker.html" class="oc"><div class="oc-icon">⟺</div><div class="oc-name">Text Diff</div><div class="oc-desc">Compare two texts</div></a>
+    </div></div>
+  </div>
+  <footer>© 2025 <a href="index.html">NEXUS Tools</a> · Free Tech Tools · No account required · Made with ❤️ in India 🇮🇳</footer>
+</div>
+<script>
+function formatJSON(){
+  try{
+    const v=JSON.parse(document.getElementById('json-in').value);
+    document.getElementById('json-out').value=JSON.stringify(v,null,2);
+    setStatus('✓ Valid JSON — beautifully formatted','ok');
+    renderTree(v);
+    document.getElementById('tree-wrap').style.display='block';
+  }catch(e){setStatus('✗ '+e.message,'err');document.getElementById('tree-wrap').style.display='none';}
+}
+function minifyJSON(){
+  try{const v=JSON.parse(document.getElementById('json-in').value);document.getElementById('json-out').value=JSON.stringify(v);setStatus('✓ Minified — '+JSON.stringify(v).length+' characters','ok');}
+  catch(e){setStatus('✗ '+e.message,'err');}
+}
+function validateJSON(){
+  try{JSON.parse(document.getElementById('json-in').value);setStatus('✓ Valid JSON! Structure is correct and well-formed.','ok');}
+  catch(e){setStatus('✗ Invalid JSON: '+e.message,'err');}
+}
+function clearJSON(){document.getElementById('json-in').value='';document.getElementById('json-out').value='';setStatus('','');document.getElementById('tree-wrap').style.display='none';}
+function setStatus(msg,type){const el=document.getElementById('json-status');el.className='status '+(type||'');el.textContent=msg;}
+function copyOut(){const v=document.getElementById('json-out').value;navigator.clipboard.writeText(v).then(()=>setStatus('✓ Copied to clipboard!','ok'));}
+
+function renderTree(obj,indent=0){
+  if(indent===0){document.getElementById('json-tree').innerHTML=buildTree(obj,0);return;}
+}
+function buildTree(v,depth){
+  const pad='  '.repeat(depth);
+  if(v===null)return`<span style="color:var(--red)">null</span>`;
+  if(typeof v==='boolean')return`<span style="color:var(--amber)">${v}</span>`;
+  if(typeof v==='number')return`<span style="color:#47d39a">${v}</span>`;
+  if(typeof v==='string')return`<span style="color:var(--green)">"${v}"</span>`;
+  if(Array.isArray(v)){
+    if(!v.length)return`<span style="color:var(--text3)">[]</span>`;
+    return`[<br>${v.map(i=>pad+'  '+buildTree(i,depth+1)).join(',<br>')}<br>${pad}]`;
+  }
+  const keys=Object.keys(v);
+  if(!keys.length)return`<span style="color:var(--text3)">{}</span>`;
+  return`{<br>${keys.map(k=>pad+'  <span style="color:var(--accent)">'+JSON.stringify(k)+'</span>: '+buildTree(v[k],depth+1)).join(',<br>')}<br>${pad}}`;
+}
+
+formatJSON();
+</script>
+</body>
+</html>

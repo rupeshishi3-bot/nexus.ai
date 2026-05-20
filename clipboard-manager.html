@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Clipboard Manager — NEXUS Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#040508;--bg2:#080b12;--bg3:#0c1020;--surface:rgba(255,255,255,.035);--surface2:rgba(255,255,255,.06);--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);--text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;--accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;--red:#f0635a;--glow:rgba(91,141,238,.25);--r:12px;--r2:18px;--fd:'Syne',sans-serif;--fm:'Space Mono',monospace;--fb:'DM Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);overflow-x:hidden;cursor:none;transition:background .4s,color .4s;line-height:1.6}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+#cur{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s;mix-blend-mode:screen}
+#ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(91,141,238,.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s}
+#bgc{position:fixed;inset:0;z-index:0;opacity:.5}
+.w{position:relative;z-index:1;min-height:100vh}
+nav{position:fixed;inset:0 0 auto;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,.7);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);transition:background .3s}
+.logo{font-family:var(--fd);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;cursor:none}
+.logo span{-webkit-text-fill-color:var(--accent3)}
+.nr{display:flex;align-items:center;gap:.75rem}
+.back{padding:.4rem .9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:.875rem;text-decoration:none;cursor:none;transition:.2s}.back:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
+.thm{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;transition:.2s}.thm:hover{border-color:var(--accent)}
+main{max-width:720px;margin:0 auto;padding:96px 2rem 5rem}
+@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hdr{margin-bottom:2.5rem;animation:fu .7s ease both}
+.bc{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--text3);margin-bottom:1.25rem;flex-wrap:wrap}
+.bc a{color:var(--text3);text-decoration:none;cursor:none}.bc a:hover{color:var(--accent)}.bc s{opacity:.4}
+.hero{display:flex;align-items:center;gap:1.25rem}
+.ic{width:64px;height:64px;border-radius:18px;background:rgba(91,141,238,.12);border:1px solid rgba(91,141,238,.25);display:flex;align-items:center;justify-content:center;font-size:1.75rem;flex-shrink:0}
+.ttl{font-family:var(--fd);font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:.35rem}
+.sub{color:var(--text2);font-size:.9375rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:2rem;animation:fu .7s ease .1s both}
+.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;color:var(--text);font-size:.9375rem;font-family:var(--fb);outline:none;transition:border-color .2s,box-shadow .2s;cursor:none}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,.15)}
+.fi::placeholder{color:var(--text3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:10px;font-size:.9375rem;font-weight:500;font-family:var(--fb);cursor:none;transition:all .2s;border:none;outline:none}
+.bp{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,141,238,.3)}
+.bp:hover{transform:translateY(-1px)}
+.bs{background:var(--surface2);border:1px solid var(--border2);color:var(--text)}.bs:hover{border-color:var(--accent);color:var(--accent)}
+.bsm{padding:.5rem 1rem;font-size:.875rem}
+/* Input row */
+.inp-row{display:flex;gap:.6rem;margin-bottom:1.25rem;align-items:stretch}
+.inp-row textarea{flex:1;min-height:80px;resize:none;border-radius:10px;padding:.75rem 1rem;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:.9rem;font-family:var(--fb);outline:none;transition:border-color .2s,box-shadow .2s;cursor:text}
+.inp-row textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,.15)}
+.inp-row textarea::placeholder{color:var(--text3)}
+/* Clip items */
+.clip-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.6rem;display:flex;align-items:center;gap:.75rem;transition:.2s;animation:fu .3s ease}
+.clip-item:hover{border-color:var(--border2)}
+.clip-text{flex:1;font-size:.875rem;color:var(--text2);word-break:break-all;line-height:1.5;max-height:56px;overflow:hidden}
+.clip-actions{display:flex;align-items:center;gap:.4rem;flex-shrink:0}
+.copy-btn{background:rgba(91,141,238,.12);border:1px solid rgba(91,141,238,.25);border-radius:6px;color:var(--accent);font-size:.72rem;padding:.3rem .65rem;cursor:none;transition:.2s;white-space:nowrap}
+.copy-btn:hover{background:rgba(91,141,238,.22)}
+.del-btn{background:none;border:none;color:var(--red);cursor:none;font-size:1rem;padding:.25rem;opacity:.7;transition:.2s;line-height:1}
+.del-btn:hover{opacity:1;transform:scale(1.1)}
+.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text3);font-size:.9rem}
+.empty-state .ei{font-size:2.5rem;margin-bottom:.75rem}
+/* Count badge */
+.count-badge{font-size:.72rem;color:var(--text3);margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center}
+.ig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:2rem;animation:fu .7s ease .2s both}
+@media(max-width:560px){.ig{grid-template-columns:1fr}}
+.icard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem}
+.iico{font-size:1.5rem;margin-bottom:.6rem}
+.ittl{font-family:var(--fd);font-size:.875rem;font-weight:700;margin-bottom:.3rem}
+.idesc{font-size:.8rem;color:var(--text3);line-height:1.5}
+#toast{position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:.875rem 1.25rem;display:flex;align-items:center;gap:.75rem;font-size:.875rem;color:var(--text);box-shadow:0 20px 40px rgba(0,0,0,.4);transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+.lm{--bg:#faf8f4;--bg2:#fff;--bg3:#f2efe9;--surface:rgba(15,10,5,.045);--surface2:rgba(15,10,5,.08);--border:rgba(15,10,5,.09);--border2:rgba(15,10,5,.16);--text:#130f0a;--text2:#5a5048;--text3:#a8998a;--accent:#2c5fe3;--accent2:#6c3fd4;--accent3:#00a98a;--red:#c0392b}
+.lm nav{background:rgba(250,248,244,.82)}.lm .card,.lm .icard{background:#fff;border-color:rgba(15,10,5,.09)}
+.lm .clip-item{background:#f7f5f0;border-color:rgba(15,10,5,.09)}.lm .inp-row textarea{background:#f7f5f0;border-color:rgba(15,10,5,.1);cursor:text}
+.lm #toast{background:#fff}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="ring"></div><canvas id="bgc"></canvas>
+<div id="toast"><span id="ti">✓</span> <span id="tm"></span></div>
+<nav id="nav">
+  <a class="logo" href="index.html">NEXUS<span>.</span></a>
+  <div class="nr"><a class="back" href="index.html">← Back to All Tools</a><div class="thm" onclick="toggleTheme()">🌙</div></div>
+</nav>
+<div class="w"><main>
+  <div class="hdr">
+    <div class="bc"><a href="index.html">Home</a><s>›</s><a href="index.html">Productivity</a><s>›</s><span style="color:var(--text2)">Clipboard Manager</span></div>
+    <div class="hero"><div class="ic">📋</div><div>
+      <div class="ttl">Clipboard Manager</div>
+      <div class="sub">Store and manage up to 20 clipboard snippets — always within reach</div>
+    </div></div>
+  </div>
+
+  <div class="card">
+    <div class="inp-row">
+      <textarea id="clip-input" placeholder="Paste or type text to save as a clip...&#10;Tip: use Ctrl+V to paste anything"></textarea>
+      <button class="btn bp" style="align-self:stretch" onclick="addClip()">Save</button>
+    </div>
+    <div id="count-badge" class="count-badge"><span id="clip-count">0 clips saved</span><button class="bs bsm btn" onclick="clearAll()">Clear All</button></div>
+    <div id="clips-list"></div>
+  </div>
+
+  <div class="ig">
+    <div class="icard"><div class="iico">📌</div><div class="ittl">Up to 20 Clips</div><div class="idesc">Store frequently used text, passwords, links, and code snippets for instant one-click copy.</div></div>
+    <div class="icard"><div class="iico">💾</div><div class="ittl">Persisted Locally</div><div class="idesc">Clips are saved in your browser. They'll still be here next time you open this page.</div></div>
+    <div class="icard"><div class="iico">⚡</div><div class="ittl">One-Click Copy</div><div class="idesc">Click any clip to copy it to your clipboard instantly — no selecting, no right-clicking needed.</div></div>
+  </div>
+</main></div>
+
+<script>
+let lm=localStorage.getItem('nx-theme')==='light';
+if(lm){document.body.classList.add('lm');document.querySelector('.thm').textContent='☀️';}
+function toggleTheme(){lm=!lm;document.body.classList.toggle('lm',lm);document.querySelector('.thm').textContent=lm?'☀️':'🌙';localStorage.setItem('nx-theme',lm?'light':'dark');}
+const cur=document.getElementById('cur'),ring=document.getElementById('ring');
+let cx=0,cy=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;cur.style.left=cx+'px';cur.style.top=cy+'px';});
+(function a(){rx+=(cx-rx)*.12;ry+=(cy-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(a);})();
+document.addEventListener('mousedown',()=>{cur.style.width='6px';cur.style.height='6px'});
+document.addEventListener('mouseup',()=>{cur.style.width='10px';cur.style.height='10px'});
+document.querySelectorAll('button,a').forEach(el=>{el.addEventListener('mouseenter',()=>{ring.style.width='54px';ring.style.height='54px';ring.style.borderColor='rgba(91,141,238,.8)'});el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(91,141,238,.5)'});});
+(function(){const c=document.getElementById('bgc'),x=c.getContext('2d');let W,H,p=[];function r(){W=c.width=innerWidth;H=c.height=innerHeight}r();addEventListener('resize',r);for(let i=0;i<80;i++)p.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.4+.1});function d(){x.clearRect(0,0,W,H);const lm=document.body.classList.contains('lm');p.forEach(pt=>{pt.x+=pt.vx;pt.y+=pt.vy;if(pt.x<0)pt.x=W;if(pt.x>W)pt.x=0;if(pt.y<0)pt.y=H;if(pt.y>H)pt.y=0;x.beginPath();x.arc(pt.x,pt.y,pt.r,0,Math.PI*2);x.fillStyle=`rgba(${lm?'44,95,227':'91,141,238'},${pt.o})`;x.fill();});x.strokeStyle=lm?'rgba(15,10,5,0.03)':'rgba(255,255,255,0.02)';x.lineWidth=1;for(let i=0;i<W;i+=80){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke();}for(let i=0;i<H;i+=80){x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke();}requestAnimationFrame(d);}d();})();
+let _tt;function toast(m,ic='✓'){const t=document.getElementById('toast');document.getElementById('tm').textContent=m;document.getElementById('ti').textContent=ic;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2500);}
+window.addEventListener('scroll',()=>{document.getElementById('nav').style.background=scrollY>50?'rgba(4,5,8,.95)':'rgba(4,5,8,.7)';});
+
+let clips=JSON.parse(localStorage.getItem('nx-clips')||'[]');
+
+function save(){localStorage.setItem('nx-clips',JSON.stringify(clips));}
+
+function render(){
+  const list=document.getElementById('clips-list');
+  document.getElementById('clip-count').textContent=`${clips.length} clip${clips.length!==1?'s':''} saved (max 20)`;
+  if(!clips.length){
+    list.innerHTML=`<div class="empty-state"><div class="ei">📭</div><div>No clips yet.<br>Type or paste something above and click <strong>Save</strong>.</div></div>`;
+    return;
+  }
+  list.innerHTML=clips.map((c,i)=>{
+    const preview=c.substring(0,120)+(c.length>120?'…':'');
+    const esc=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+    return `<div class="clip-item">
+      <div class="clip-text">${preview.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      <div class="clip-actions">
+        <button class="copy-btn" onclick="copyClip(${i})">Copy</button>
+        <button class="del-btn" onclick="removeClip(${i})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addClip(){
+  const v=document.getElementById('clip-input').value.trim();
+  if(!v){toast('Type something first','⚡');return;}
+  clips.unshift(v);clips=clips.slice(0,20);save();render();
+  document.getElementById('clip-input').value='';
+  toast('Clip saved!','📌');
+}
+
+function copyClip(i){
+  navigator.clipboard.writeText(clips[i]).then(()=>toast('Copied!','📋')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=clips[i];document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Copied!','📋');
+  });
+}
+
+function removeClip(i){clips.splice(i,1);save();render();toast('Clip removed','🗑️');}
+
+function clearAll(){
+  if(!clips.length)return;
+  if(!confirm('Clear all clips?'))return;
+  clips=[];save();render();toast('All clips cleared','🗑️');
+}
+
+// Enter to save
+document.getElementById('clip-input').addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter')addClip();});
+
+render();
+</script>
+</body></html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Age Calculator — NEXUS Health Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #040508; --bg2: #080b12; --bg3: #0c1020;
+  --surface: rgba(255,255,255,0.035); --surface2: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf0; --text2: #8b90a8; --text3: #555b72;
+  --accent: #5b8dee; --accent2: #7c6dfa; --accent3: #0fe8c8;
+  --red: #f0635a; --amber: #f5a623; --green: #2fd771;
+  --r: 12px; --r2: 18px; --r3: 24px;
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;min-height:100vh;}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em;text-decoration:none;}
+.nav-logo span{color:var(--accent3);-webkit-text-fill-color:var(--accent3)}
+.back-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.4rem 0.9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.875rem;text-decoration:none;transition:.2s;}
+.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+.health-tabs{display:flex;gap:0.5rem;padding:0.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);flex-wrap:wrap;}
+.htab{display:inline-flex;align-items:center;gap:0.4rem;padding:0.45rem 0.9rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:0.8375rem;text-decoration:none;transition:.2s;white-space:nowrap;}
+.htab:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
+.htab.active{background:rgba(245,166,35,0.12);border-color:rgba(245,166,35,0.3);color:#f5a623;}
+.page-wrap{padding-top:64px;min-height:100vh;display:flex;flex-direction:column;}
+.hero-section{padding:3rem 2rem 2rem;background:radial-gradient(ellipse 800px 400px at 50% 0%, rgba(245,166,35,0.07), transparent);border-bottom:1px solid var(--border);text-align:center;}
+.tool-badge-chip{display:inline-flex;align-items:center;gap:0.4rem;padding:0.3rem 0.8rem;border-radius:100px;font-size:0.8rem;font-weight:500;margin:0 0.25rem 1rem;}
+.tool-icon-big{width:72px;height:72px;border-radius:20px;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.2);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1rem;}
+.tool-title{font-family:var(--font-display);font-size:2.5rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:0.5rem;}
+.tool-desc{color:var(--text2);font-size:1.0625rem;max-width:500px;margin:0 auto 1.5rem;}
+.meta-chips{display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;}
+.meta-chip{font-size:0.78rem;color:var(--text3);display:flex;align-items:center;gap:0.3rem;}
+.main-content{flex:1;padding:2.5rem 2rem;max-width:760px;margin:0 auto;width:100%;}
+.tool-card-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.card-header{padding:1.5rem;border-bottom:1px solid var(--border);background:rgba(245,166,35,0.06);display:flex;align-items:center;gap:1rem;}
+.card-header-icon{width:48px;height:48px;border-radius:14px;background:rgba(245,166,35,0.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;}
+.card-header-title{font-family:var(--font-display);font-size:1.2rem;font-weight:700;}
+.card-header-sub{font-size:0.875rem;color:var(--text2);}
+.card-body{padding:1.75rem;}
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:0.8125rem;font-weight:500;color:var(--text2);margin-bottom:0.4rem;letter-spacing:0.01em;}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;transition:border-color .2s,box-shadow .2s;}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,0.15)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:480px){.form-row{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.8rem 1.5rem;border-radius:10px;font-size:0.9375rem;font-weight:500;font-family:var(--font-body);cursor:pointer;transition:all .2s;border:none;outline:none;width:100%;}
+.btn-primary{background:linear-gradient(135deg,#f5a623,#f0635a);color:#fff;box-shadow:0 4px 20px rgba(245,166,35,0.3);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(245,166,35,0.4)}
+.result-box{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.2);border-radius:var(--r);padding:1.5rem;margin-top:1.5rem;display:none;animation:fadeIn .35s ease;}
+.result-box.show{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.result-label{font-size:0.78rem;color:#f5a623;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.75rem;}
+.result-main{text-align:center;padding:0.75rem 0 1rem;}
+.result-val{font-family:var(--font-display);font-size:3.5rem;font-weight:800;background:linear-gradient(135deg,#f5a623,#f0635a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+.result-val-sub{font-size:1rem;color:var(--text2);margin-top:0.35rem;}
+.result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem;margin-top:1rem;}
+.result-item{background:var(--bg3);border-radius:8px;padding:0.875rem;text-align:center;}
+.ri-label{font-size:0.72rem;color:var(--text3);margin-bottom:0.25rem;text-transform:uppercase;letter-spacing:0.06em;}
+.ri-val{font-size:1.5rem;font-weight:800;color:var(--text);font-family:var(--font-display);}
+.ri-unit{font-size:0.75rem;color:var(--text3);margin-top:0.1rem;}
+.fun-facts{margin-top:1rem;}
+.fun-fact-row{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0;border-bottom:1px solid var(--border);font-size:0.875rem;color:var(--text2);}
+.fun-fact-row:last-child{border-bottom:none;}
+.fun-fact-icon{font-size:1.1rem;flex-shrink:0;}
+.info-section{margin-top:2rem;}
+.info-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.5rem;margin-bottom:1rem;}
+.info-card h3{font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;}
+.info-card p{color:var(--text2);font-size:0.9rem;line-height:1.75;}
+.other-tools{margin-top:2.5rem;}
+.other-tools h3{font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--text2);}
+.other-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;}
+.other-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem;text-decoration:none;color:inherit;transition:.3s;display:block;}
+.other-card:hover{border-color:var(--border2);transform:translateY(-2px);background:var(--surface2);}
+.other-card-icon{font-size:1.5rem;margin-bottom:0.5rem;}
+.other-card-name{font-family:var(--font-display);font-size:0.9rem;font-weight:700;margin-bottom:0.2rem;}
+.other-card-desc{font-size:0.78rem;color:var(--text3);}
+.page-footer{border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;font-size:0.8rem;color:var(--text3);}
+.page-footer a{color:var(--accent);text-decoration:none;}
+
+/* BIRTHDAY COUNTDOWN */
+.bday-section{background:rgba(245,166,35,0.07);border:1px solid rgba(245,166,35,0.2);border-radius:var(--r);padding:1.25rem;margin-top:1rem;display:none;}
+.bday-section.show{display:block;}
+.bday-title{font-size:0.78rem;color:#f5a623;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem;}
+.bday-val{font-family:var(--font-display);font-size:1.75rem;font-weight:800;color:#f5a623;}
+.bday-sub{font-size:0.85rem;color:var(--text2);margin-top:0.25rem;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">NEXUS<span>.</span></a>
+  <a href="index.html" class="back-btn">← Back to All Tools</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="hero-section">
+    <div class="tool-icon-big">🎂</div>
+    <div>
+      <span class="tool-badge-chip" style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.25);color:#f5a623;">❤️ Health</span>
+      <span class="tool-badge-chip" style="background:rgba(240,99,90,0.12);border:1px solid rgba(240,99,90,0.25);color:#f0635a;">🔥 HOT</span>
+    </div>
+    <h1 class="tool-title">Age Calculator</h1>
+    <p class="tool-desc">Calculate your exact age in years, months, days, hours and more. Find days until your next birthday too!</p>
+    <div class="meta-chips">
+      <span class="meta-chip">👁 920K uses</span>
+      <span class="meta-chip">·</span>
+      <span class="meta-chip">🎂 Birthday countdown</span>
+      <span class="meta-chip">·</span>
+      <span class="meta-chip">🔒 No data stored</span>
+    </div>
+  </div>
+
+  <div style="padding:1.25rem 2rem;max-width:760px;margin:0 auto;width:100%;">
+    <div class="health-tabs">
+      <a href="bmi-calculator.html" class="htab">⚖️ BMI Calculator</a>
+      <a href="calorie-calculator.html" class="htab">🍎 Calorie Calculator</a>
+      <a href="water-intake-calculator.html" class="htab">💧 Water Intake</a>
+      <a href="age-calculator.html" class="htab active">🎂 Age Calculator</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="tool-card-wrap">
+      <div class="card-header">
+        <div class="card-header-icon">🎂</div>
+        <div>
+          <div class="card-header-title">Age Calculator</div>
+          <div class="card-header-sub">Exact age · Birthday countdown · Fun stats</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date of Birth</label>
+            <input class="form-input" id="age-dob" type="date" value="1995-06-15">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Calculate Age On</label>
+            <input class="form-input" id="age-on" type="date">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="calcAge()">🎂 Calculate Age</button>
+
+        <div class="result-box" id="age-result">
+          <div class="result-label">Your Exact Age</div>
+          <div class="result-main">
+            <div class="result-val" id="age-val">—</div>
+            <div class="result-val-sub" id="age-val-sub"></div>
+          </div>
+          <div class="result-grid" id="age-grid"></div>
+          <div id="age-fun" style="margin-top:1.25rem;"></div>
+        </div>
+
+        <div class="bday-section" id="bday-section">
+          <div class="bday-title">🎉 Next Birthday</div>
+          <div class="bday-val" id="bday-val"></div>
+          <div class="bday-sub" id="bday-sub"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="info-card">
+        <h3>📅 How Age Is Calculated</h3>
+        <p>This calculator uses precise calendar arithmetic — accounting for leap years, varying month lengths, and the exact number of days. The result is your age in complete years, months, and remaining days, not just a rough estimate.</p>
+      </div>
+      <div class="info-card">
+        <h3>🌍 Age Around the World</h3>
+        <p>In most countries, age is calculated from birth date. In South Korea, a traditional system adds 1 year at birth and another on January 1st, making someone 1–2 years "older" than their international age. Since 2023, South Korea officially adopted the international standard for legal and administrative purposes.</p>
+      </div>
+    </div>
+
+    <div class="other-tools">
+      <h3>More Health Tools</h3>
+      <div class="other-grid">
+        <a href="bmi-calculator.html" class="other-card">
+          <div class="other-card-icon">⚖️</div>
+          <div class="other-card-name">BMI Calculator</div>
+          <div class="other-card-desc">Body Mass Index with WHO classification</div>
+        </a>
+        <a href="calorie-calculator.html" class="other-card">
+          <div class="other-card-icon">🍎</div>
+          <div class="other-card-name">Calorie Calculator</div>
+          <div class="other-card-desc">Daily calorie needs based on lifestyle</div>
+        </a>
+        <a href="water-intake-calculator.html" class="other-card">
+          <div class="other-card-icon">💧</div>
+          <div class="other-card-name">Water Intake</div>
+          <div class="other-card-desc">Optimal hydration based on body weight</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    © 2025 <a href="index.html">NEXUS Tools</a> · Free Health Tools · No account required · Made with ❤️ in India 🇮🇳
+  </div>
+</div>
+
+<script>
+// Set today as default for "calculate on"
+document.getElementById('age-on').value = new Date().toISOString().split('T')[0];
+
+function calcAge() {
+  const dob = new Date(document.getElementById('age-dob').value);
+  const on  = new Date(document.getElementById('age-on').value);
+  if (!dob || !on || isNaN(dob) || isNaN(on)) return;
+
+  let y = on.getFullYear() - dob.getFullYear();
+  let m = on.getMonth()    - dob.getMonth();
+  let d = on.getDate()     - dob.getDate();
+  if (d < 0) { m--; d += new Date(on.getFullYear(), on.getMonth(), 0).getDate(); }
+  if (m < 0) { y--; m += 12; }
+
+  const totalDays   = Math.floor((on - dob) / (1000*60*60*24));
+  const totalHours  = totalDays * 24;
+  const totalWeeks  = Math.floor(totalDays / 7);
+  const totalMonths = y * 12 + m;
+
+  document.getElementById('age-val').textContent = `${y} Years`;
+  document.getElementById('age-val-sub').textContent = `${m} month${m!==1?'s':''}, ${d} day${d!==1?'s':''} remaining`;
+
+  document.getElementById('age-grid').innerHTML = `
+    <div class="result-item"><div class="ri-label">Years</div><div class="ri-val">${y}</div><div class="ri-unit">complete years</div></div>
+    <div class="result-item"><div class="ri-label">Months</div><div class="ri-val">${totalMonths.toLocaleString()}</div><div class="ri-unit">total months</div></div>
+    <div class="result-item"><div class="ri-label">Weeks</div><div class="ri-val">${totalWeeks.toLocaleString()}</div><div class="ri-unit">total weeks</div></div>
+    <div class="result-item"><div class="ri-label">Days</div><div class="ri-val">${totalDays.toLocaleString()}</div><div class="ri-unit">total days lived</div></div>`;
+
+  const funFacts = [
+    { icon: '💓', text: `Your heart has beaten approx. ${(totalDays * 103680).toLocaleString()} times` },
+    { icon: '😴', text: `You've slept approx. ${Math.round(totalDays * 8 / 24)} years (8 hrs/day)` },
+    { icon: '🍽️', text: `You've had approx. ${(totalDays * 3).toLocaleString()} meals` },
+    { icon: '🌍', text: `Earth has orbited the sun ${y} times since you were born` },
+  ];
+  document.getElementById('age-fun').innerHTML = `
+    <div style="font-size:0.78rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem;">Fun Facts</div>
+    ${funFacts.map(f=>`<div class="fun-fact-row"><span class="fun-fact-icon">${f.icon}</span><span>${f.text}</span></div>`).join('')}`;
+
+  document.getElementById('age-result').classList.add('show');
+
+  // Birthday countdown
+  const today = new Date();
+  const nextBday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+  if (nextBday < today) nextBday.setFullYear(today.getFullYear() + 1);
+  const daysUntil = Math.ceil((nextBday - today) / (1000*60*60*24));
+  const bdayStr = nextBday.toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'});
+
+  document.getElementById('bday-val').textContent = daysUntil === 0 ? '🎉 Today is your birthday!' : `${daysUntil} days away`;
+  document.getElementById('bday-sub').textContent = daysUntil === 0 ? 'Happy Birthday! 🎂' : `Next birthday: ${bdayStr}`;
+  document.getElementById('bday-section').classList.add('show');
+}
+</script>
+</body>
+</html>

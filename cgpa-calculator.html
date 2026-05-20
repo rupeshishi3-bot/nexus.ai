@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NEXUS CGPA to Percentage Converter — Convert your CGPA to percentage for 10-point and 4-point GPA scales instantly.">
+<title>CGPA to Percentage Calculator — NEXUS Education Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #040508; --bg2: #080b12; --bg3: #0c1020;
+  --surface: rgba(255,255,255,0.035); --surface2: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf0; --text2: #8b90a8; --text3: #555b72;
+  --accent: #5b8dee; --accent2: #7c6dfa; --accent3: #0fe8c8;
+  --glow: rgba(91,141,238,0.25); --glow2: rgba(124,109,250,0.2);
+  --r: 12px; --r2: 18px; --r3: 24px;
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+  --cat-color: rgba(124,109,250,0.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;overflow-x:hidden;cursor:none;transition:background .4s,color .4s}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+
+/* CURSOR */
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s;mix-blend-mode:screen}
+#cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(91,141,238,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s,transform .1s}
+
+/* CANVAS */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.5}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,0.8);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em;text-decoration:none}
+.nav-logo span{-webkit-text-fill-color:var(--accent3)}
+.nav-back{display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.875rem;text-decoration:none;transition:.2s;cursor:none}
+.nav-back:hover{border-color:var(--accent);color:var(--accent)}
+.nav-theme{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;transition:.2s}
+.nav-theme:hover{border-color:var(--accent)}
+.nav-right{display:flex;align-items:center;gap:0.75rem}
+
+/* LAYOUT */
+.site-wrap{position:relative;z-index:1;min-height:100vh;padding-top:64px}
+.page-container{max-width:760px;margin:0 auto;padding:4rem 2rem 6rem}
+
+/* BREADCRUMB */
+.breadcrumb{display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--text3);margin-bottom:2.5rem;flex-wrap:wrap}
+.breadcrumb a{color:var(--text3);text-decoration:none;transition:.15s;cursor:none}
+.breadcrumb a:hover{color:var(--accent)}
+.breadcrumb-sep{opacity:0.4}
+.breadcrumb-cur{color:var(--text2)}
+
+/* TOOL HEADER */
+.tool-header{display:flex;align-items:flex-start;gap:1.25rem;margin-bottom:2.5rem;padding:2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r3)}
+.tool-header-icon{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;background:var(--cat-color)}
+.tool-header-text{}
+.tool-header-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:100px;background:rgba(240,99,90,0.15);color:#f0635a;border:1px solid rgba(240,99,90,0.25);margin-bottom:0.5rem}
+.tool-header h1{font-family:var(--font-display);font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.4rem}
+.tool-header-desc{color:var(--text2);font-size:0.9375rem}
+.tool-meta-row{display:flex;gap:1.25rem;margin-top:0.75rem;font-size:0.78rem;color:var(--text3)}
+
+/* TOOL CARD */
+.tool-card-main{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden;margin-bottom:2rem}
+.tool-card-body{padding:2rem}
+
+/* FORM */
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:0.8125rem;font-weight:500;color:var(--text2);margin-bottom:0.4rem;letter-spacing:0.01em}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;transition:border-color .2s,box-shadow .2s;cursor:none}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,0.15)}
+.form-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;cursor:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b90a8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:520px){.form-row{grid-template-columns:1fr}}
+
+/* BUTTON */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.875rem 1.5rem;border-radius:10px;font-size:0.9375rem;font-weight:500;font-family:var(--font-body);cursor:none;transition:all .2s;border:none;outline:none;text-decoration:none;width:100%;margin-top:0.5rem}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,141,238,0.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(91,141,238,0.4)}
+
+/* RESULT */
+.result-box{background:rgba(91,141,238,0.06);border:1px solid rgba(91,141,238,0.2);border-radius:var(--r);padding:1.5rem;margin-top:1.5rem;display:none}
+.result-box.show{display:block}
+.result-label{font-size:0.8rem;color:var(--accent);font-weight:500;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em}
+.result-val{font-family:var(--font-display);font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.result-sub{font-size:0.9rem;color:var(--text2);margin-top:0.4rem}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-top:1rem}
+.result-item{background:var(--bg3);border-radius:10px;padding:0.875rem}
+.ri-label{font-size:0.72rem;color:var(--text3);margin-bottom:0.25rem;text-transform:uppercase;letter-spacing:0.06em}
+.ri-val{font-size:1rem;font-weight:600;color:var(--text)}
+
+/* INFO SECTION */
+.info-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:2rem;margin-bottom:1.5rem}
+.info-section h2{font-family:var(--font-display);font-size:1.25rem;font-weight:700;margin-bottom:1rem}
+.info-section p{color:var(--text2);font-size:0.9rem;line-height:1.75;margin-bottom:0.75rem}
+.info-section ul{padding-left:1.25rem;color:var(--text2);font-size:0.9rem;line-height:1.75}
+.info-section ul li{margin-bottom:0.4rem}
+.highlight-box{background:rgba(91,141,238,0.08);border:1px solid rgba(91,141,238,0.2);border-radius:10px;padding:1rem 1.25rem;margin:1rem 0;font-size:0.9rem;color:var(--text2);line-height:1.7}
+.formula-box{font-family:var(--font-mono);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0.875rem 1rem;font-size:0.85rem;color:var(--accent3);margin:0.75rem 0}
+
+/* GRADE TABLE */
+.grade-table{width:100%;border-collapse:collapse;margin-top:0.75rem;font-size:0.875rem}
+.grade-table th{text-align:left;padding:0.6rem 0.75rem;font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border)}
+.grade-table td{padding:0.6rem 0.75rem;border-bottom:1px solid var(--border);color:var(--text2)}
+.grade-table tr:last-child td{border-bottom:none}
+
+/* RELATED TOOLS */
+.related-tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1.5rem}
+.related-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem;text-decoration:none;color:inherit;display:flex;align-items:center;gap:0.75rem;transition:.2s;cursor:none}
+.related-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+.related-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;background:var(--surface2)}
+.related-name{font-size:0.875rem;font-weight:600}
+.related-cat{font-size:0.75rem;color:var(--text3)}
+
+/* TOAST */
+#toast{position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:0.875rem 1.25rem;display:flex;align-items:center;gap:0.75rem;font-size:0.875rem;color:var(--text);box-shadow:0 20px 40px rgba(0,0,0,0.4);transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.fadeUp{animation:fadeUp .6s ease both}
+.fadeUp-d1{animation-delay:.1s} .fadeUp-d2{animation-delay:.2s} .fadeUp-d3{animation-delay:.3s}
+
+/* LIGHT MODE */
+.light-mode{--bg:#faf8f4;--bg2:#ffffff;--bg3:#f2efe9;--surface:rgba(15,10,5,0.045);--surface2:rgba(15,10,5,0.08);--border:rgba(15,10,5,0.09);--border2:rgba(15,10,5,0.16);--text:#130f0a;--text2:#5a5048;--text3:#a8998a;--accent:#2c5fe3;--accent2:#6c3fd4;--accent3:#00a98a}
+.light-mode nav{background:rgba(250,248,244,0.9)}
+.light-mode .tool-card-main{background:#fff}
+.light-mode .result-box{background:rgba(44,95,227,0.06);border-color:rgba(44,95,227,0.2)}
+.light-mode #cursor-ring{border-color:rgba(44,95,227,0.45)}
+.light-mode #cursor{background:var(--accent)}
+
+/* MOBILE */
+@media(max-width:640px){
+  .page-container{padding:2.5rem 1.25rem 5rem}
+  .tool-header{flex-direction:column;gap:0.875rem;padding:1.5rem}
+  .tool-header h1{font-size:1.4rem}
+  .tool-meta-row{flex-wrap:wrap;gap:0.75rem}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="bg-canvas"></canvas>
+<div id="toast"><span id="toast-icon">✓</span><span id="toast-msg">Done!</span></div>
+
+<nav>
+  <a class="nav-logo" href="index.html">NEXUS<span>.</span></a>
+  <div class="nav-right">
+    <a class="nav-back" href="index.html">← Back to All Tools</a>
+    <div class="nav-theme" onclick="toggleTheme()" title="Toggle theme">🌙</div>
+  </div>
+</nav>
+
+<div class="site-wrap">
+<div class="page-container">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb fadeUp">
+    <a href="index.html">Home</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="index.html#categories">Education</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-cur">CGPA to Percentage</span>
+  </div>
+
+  <!-- TOOL HEADER -->
+  <div class="tool-header fadeUp fadeUp-d1">
+    <div class="tool-header-icon">🎓</div>
+    <div class="tool-header-text">
+      <div class="tool-header-badge">🔥 HOT · 760K uses</div>
+      <h1>CGPA to Percentage Calculator</h1>
+      <div class="tool-header-desc">Convert your CGPA to percentage for 10-point and 4-point GPA scales. Get your grade classification instantly.</div>
+      <div class="tool-meta-row">
+        <span>👁 760K uses</span>
+        <span>· Education</span>
+        <span>· Free Forever</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN TOOL -->
+  <div class="tool-card-main fadeUp fadeUp-d2">
+    <div class="tool-card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Your CGPA</label>
+          <input class="form-input" id="cgpa-val" type="number" step="0.01" value="8.5" max="10" placeholder="e.g. 8.5" oninput="calcCGPA()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CGPA Scale</label>
+          <select class="form-select" id="cgpa-scale" onchange="calcCGPA()">
+            <option value="10">10 Point Scale</option>
+            <option value="4">4 Point Scale (GPA)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="calcCGPA()">Convert to Percentage</button>
+      <div class="result-box" id="cgpa-result">
+        <div class="result-label">Equivalent Percentage</div>
+        <div class="result-val" id="cgpa-pct"></div>
+        <div class="result-sub" id="cgpa-sub"></div>
+        <div class="result-grid" id="cgpa-grid"></div>
+        <button onclick="copyResult()" style="margin-top:1rem;padding:0.5rem 1rem;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:0.8rem;cursor:none;transition:.2s;font-family:var(--font-body)">📋 Copy Result</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO: HOW IT WORKS -->
+  <div class="info-section fadeUp fadeUp-d3">
+    <h2>📐 How the Conversion Works</h2>
+    <p>Most Indian universities use a multiplier formula to convert CGPA to percentage. The most widely accepted formula (used by CBSE, Anna University, VTU, and many others) is:</p>
+    <div class="formula-box">Percentage = CGPA × 9.5</div>
+    <p>For example: A CGPA of 8.5 on a 10-point scale = <strong>8.5 × 9.5 = 80.75%</strong></p>
+    <div class="highlight-box">
+      ⚠️ Note: Different universities may use different multipliers (9.0, 9.5, or custom formulas). Always check your university's official conversion policy.
+    </div>
+    <p>For 4-point GPA scales (common in US universities and some Indian institutions), the formula is:</p>
+    <div class="formula-box">Percentage = (GPA / 4) × 100</div>
+  </div>
+
+  <!-- INFO: GRADE REFERENCE -->
+  <div class="info-section">
+    <h2>🏅 Grade Classification Reference</h2>
+    <table class="grade-table">
+      <thead>
+        <tr><th>Percentage</th><th>Grade</th><th>Classification</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>90% and above</td><td>O</td><td>Outstanding</td></tr>
+        <tr><td>80% – 89.99%</td><td>A+</td><td>Excellent</td></tr>
+        <tr><td>70% – 79.99%</td><td>A</td><td>Very Good</td></tr>
+        <tr><td>60% – 69.99%</td><td>B+</td><td>Good</td></tr>
+        <tr><td>50% – 59.99%</td><td>B</td><td>Average</td></tr>
+        <tr><td>Below 50%</td><td>F</td><td>Below Average</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RELATED TOOLS -->
+  <div class="info-section">
+    <h2>🎓 Other Education Tools</h2>
+    <div class="related-tools">
+      <a class="related-card" href="percentage-calculator.html">
+        <div class="related-icon">%</div>
+        <div><div class="related-name">Percentage Calculator</div><div class="related-cat">Education</div></div>
+      </a>
+      <a class="related-card" href="grade-calculator.html">
+        <div class="related-icon">📚</div>
+        <div><div class="related-name">Grade Calculator</div><div class="related-cat">Education</div></div>
+      </a>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// CURSOR
+const cursor=document.getElementById('cursor'),cursorRing=document.getElementById('cursor-ring');
+let curX=0,curY=0,ringX=0,ringY=0;
+document.addEventListener('mousemove',e=>{curX=e.clientX;curY=e.clientY;cursor.style.left=curX+'px';cursor.style.top=curY+'px'});
+function animRing(){ringX+=(curX-ringX)*0.12;ringY+=(curY-ringY)*0.12;cursorRing.style.left=ringX+'px';cursorRing.style.top=ringY+'px';requestAnimationFrame(animRing)}
+animRing();
+document.addEventListener('mousedown',()=>{cursor.style.width='6px';cursor.style.height='6px'});
+document.addEventListener('mouseup',()=>{cursor.style.width='10px';cursor.style.height='10px'});
+
+// CANVAS
+(function(){
+  const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');
+  let W,H,particles=[];
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<60;i++)particles.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.4+.1});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const light=document.body.classList.contains('light-mode');
+    const pc=light?'rgba(44,95,227,':'rgba(91,141,238,';
+    const gc=light?'rgba(15,10,5,0.03)':'rgba(255,255,255,0.02)';
+    particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`${pc}${p.o})`;ctx.fill()});
+    ctx.strokeStyle=gc;ctx.lineWidth=1;
+    for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(let y=0;y<H;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// THEME
+let isLight=false;
+function toggleTheme(){
+  isLight=!isLight;
+  document.body.classList.toggle('light-mode',isLight);
+  document.querySelector('.nav-theme').textContent=isLight?'☀️':'🌙';
+  localStorage.setItem('nx-theme',isLight?'light':'dark');
+}
+if(localStorage.getItem('nx-theme')==='light')toggleTheme();
+
+// TOAST
+function showToast(msg,icon='✓'){
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast-icon').textContent=icon;
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// CGPA CALCULATOR
+function calcCGPA(){
+  const cgpa=parseFloat(document.getElementById('cgpa-val').value)||0;
+  const scale=parseFloat(document.getElementById('cgpa-scale').value);
+  if(cgpa<=0||cgpa>scale){return;}
+  let pct;
+  if(scale===10){pct=cgpa*9.5;}
+  else{pct=cgpa/4*100;}
+  let grade;
+  if(pct>=90)grade='O — Outstanding';
+  else if(pct>=80)grade='A+ — Excellent';
+  else if(pct>=70)grade='A — Very Good';
+  else if(pct>=60)grade='B+ — Good';
+  else if(pct>=50)grade='B — Average';
+  else grade='Below Average';
+  document.getElementById('cgpa-pct').textContent=pct.toFixed(2)+'%';
+  document.getElementById('cgpa-sub').textContent='Grade: '+grade;
+  // Extra info grid
+  document.getElementById('cgpa-grid').innerHTML=`
+    <div class="result-item"><div class="ri-label">CGPA Entered</div><div class="ri-val">${cgpa} / ${scale}</div></div>
+    <div class="result-item"><div class="ri-label">Formula Used</div><div class="ri-val">${scale===10?'× 9.5':'÷ 4 × 100'}</div></div>
+    <div class="result-item"><div class="ri-label">Percentage</div><div class="ri-val">${pct.toFixed(2)}%</div></div>
+    <div class="result-item"><div class="ri-label">Classification</div><div class="ri-val">${grade.split(' — ')[0]}</div></div>
+  `;
+  document.getElementById('cgpa-result').classList.add('show');
+}
+
+function copyResult(){
+  const pct=document.getElementById('cgpa-pct').textContent;
+  const sub=document.getElementById('cgpa-sub').textContent;
+  navigator.clipboard.writeText(`CGPA Result: ${pct}\n${sub}`).then(()=>showToast('Result copied!','📋'));
+}
+
+// Auto-calculate on load
+calcCGPA();
+
+// Cursor hover effect
+document.querySelectorAll('button,a,[onclick]').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursorRing.style.width='54px';cursorRing.style.height='54px';cursorRing.style.borderColor='rgba(91,141,238,0.8)'});
+  el.addEventListener('mouseleave',()=>{cursorRing.style.width='36px';cursorRing.style.height='36px';cursorRing.style.borderColor='rgba(91,141,238,0.5)'});
+});
+</script>
+</body>
+</html>

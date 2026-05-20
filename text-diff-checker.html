@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NEXUS Text Diff Checker — Compare two texts and see exactly what was added, removed, or unchanged.">
+<title>Text Diff Checker — NEXUS Tech Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>:root{--bg:#040508;--bg2:#080b12;--bg3:#0c1020;--surface:rgba(255,255,255,0.035);--surface2:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;--accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;--green:#2fd771;--red:#f0635a;--amber:#f5a623;--r:12px;--r2:18px;--r3:24px;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--font-body:'DM Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;overflow-x:hidden;cursor:none;transition:background .4s,color .4s}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s;mix-blend-mode:screen}
+#cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(91,141,238,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.5}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,0.8);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em;text-decoration:none}
+.nav-logo span{-webkit-text-fill-color:var(--accent3)}
+.nav-back{display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.875rem;text-decoration:none;transition:.2s;cursor:none}
+.nav-back:hover{border-color:var(--accent);color:var(--accent)}
+.nav-theme{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;transition:.2s}
+.nav-right{display:flex;align-items:center;gap:0.75rem}
+.site-wrap{position:relative;z-index:1;min-height:100vh;padding-top:64px}
+.page-container{max-width:760px;margin:0 auto;padding:4rem 2rem 6rem}
+.breadcrumb{display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--text3);margin-bottom:2.5rem;flex-wrap:wrap}
+.breadcrumb a{color:var(--text3);text-decoration:none;transition:.15s;cursor:none}
+.breadcrumb a:hover{color:var(--accent)}
+.breadcrumb-sep{opacity:0.4}.breadcrumb-cur{color:var(--text2)}
+.tool-header{display:flex;align-items:flex-start;gap:1.25rem;margin-bottom:2.5rem;padding:2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);position:relative;overflow:hidden}
+.tool-header-icon{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0}
+.tool-header-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:100px;margin-bottom:0.5rem}
+.tool-header h1{font-family:var(--font-display);font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.4rem}
+.tool-header-desc{color:var(--text2);font-size:0.9375rem}
+.tool-meta-row{display:flex;gap:1.25rem;margin-top:0.75rem;font-size:0.78rem;color:var(--text3)}
+.tool-card-main{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden;margin-bottom:2rem}
+.tool-card-body{padding:2rem}
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:0.8125rem;font-weight:500;color:var(--text2);margin-bottom:0.4rem;letter-spacing:0.01em}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;transition:border-color .2s,box-shadow .2s;cursor:none}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,0.15)}
+.form-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;cursor:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b90a8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:520px){.form-row{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.875rem 1.5rem;border-radius:10px;font-size:0.9375rem;font-weight:500;font-family:var(--font-body);cursor:none;transition:all .2s;border:none;outline:none;width:100%;margin-top:0.25rem}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,141,238,0.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(91,141,238,0.4)}
+.result-box{background:rgba(91,141,238,0.06);border:1px solid rgba(91,141,238,0.2);border-radius:var(--r);padding:1.5rem;margin-top:1.5rem;display:none}
+.result-box.show{display:block}
+.result-label{font-size:0.8rem;color:var(--accent);font-weight:500;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em}
+.result-val{font-family:var(--font-display);font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.result-sub{font-size:0.9rem;color:var(--text2);margin-top:0.4rem}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-top:1rem}
+.result-item{background:var(--bg3);border-radius:10px;padding:0.875rem}
+.ri-label{font-size:0.72rem;color:var(--text3);margin-bottom:0.25rem;text-transform:uppercase;letter-spacing:0.06em}
+.ri-val{font-size:1rem;font-weight:600;color:var(--text)}
+.progress-wrap{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:1rem}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width .6s ease}
+.info-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:2rem;margin-bottom:1.5rem}
+.info-section h2{font-family:var(--font-display);font-size:1.25rem;font-weight:700;margin-bottom:1rem}
+.info-section p{color:var(--text2);font-size:0.9rem;line-height:1.75;margin-bottom:0.75rem}
+.info-section ul{padding-left:1.25rem;color:var(--text2);font-size:0.9rem;line-height:1.75}
+.info-section ul li{margin-bottom:0.4rem}
+.formula-box{font-family:var(--font-mono);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0.875rem 1rem;font-size:0.85rem;color:var(--accent3);margin:0.75rem 0}
+.highlight-box{background:rgba(91,141,238,0.08);border:1px solid rgba(91,141,238,0.2);border-radius:10px;padding:1rem 1.25rem;margin:1rem 0;font-size:0.9rem;color:var(--text2);line-height:1.7}
+.related-tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:1rem;margin-top:1.5rem}
+.related-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.1rem;text-decoration:none;color:inherit;display:flex;align-items:center;gap:0.75rem;transition:.2s;cursor:none}
+.related-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+.related-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;background:var(--surface2)}
+.related-name{font-size:0.85rem;font-weight:600}
+.related-cat{font-size:0.72rem;color:var(--text3)}
+#toast{position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:0.875rem 1.25rem;display:flex;align-items:center;gap:0.75rem;font-size:0.875rem;color:var(--text);box-shadow:0 20px 40px rgba(0,0,0,0.4);transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.fadeUp{animation:fadeUp .6s ease both}.fadeUp-d1{animation-delay:.1s}.fadeUp-d2{animation-delay:.2s}.fadeUp-d3{animation-delay:.3s}
+.light-mode{--bg:#faf8f4;--bg2:#ffffff;--bg3:#f2efe9;--surface:rgba(15,10,5,0.045);--surface2:rgba(15,10,5,0.08);--border:rgba(15,10,5,0.09);--border2:rgba(15,10,5,0.16);--text:#130f0a;--text2:#5a5048;--text3:#a8998a;--accent:#2c5fe3;--accent2:#6c3fd4;--accent3:#00a98a;--green:#1a9e55;--red:#d94040;--amber:#c97d00}
+.light-mode nav{background:rgba(250,248,244,0.9)}.light-mode .tool-card-main{background:#fff}
+.light-mode #cursor{background:var(--accent)}.light-mode #cursor-ring{border-color:rgba(44,95,227,0.45)}
+@media(max-width:640px){.page-container{padding:2.5rem 1.25rem 5rem}.tool-header{flex-direction:column;gap:0.875rem;padding:1.5rem}.tool-header h1{font-size:1.4rem}}
+
+/* TECH EXTRAS */
+.mono{font-family:var(--font-mono)}
+.copy-inline{padding:0.25rem 0.6rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:0.72rem;cursor:none;transition:.15s;font-family:var(--font-body)}
+.copy-inline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-row{display:flex;gap:0.75rem;margin-top:0.5rem}
+.btn-half{flex:1}
+.status-ok{color:var(--green);font-size:0.85rem;margin-top:0.5rem}
+.status-err{color:var(--red);font-size:0.85rem;margin-top:0.5rem}
+/* TYPING */
+#typing-text{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1.25rem;font-size:1rem;line-height:1.9;letter-spacing:0.02em;margin-bottom:1rem;min-height:80px;user-select:none}
+.correct-char{color:var(--green)}
+.wrong-char{color:var(--red);background:rgba(240,99,90,0.15);border-radius:2px}
+.current-char{background:var(--accent);color:#fff;border-radius:2px}
+#typing-input{width:100%;background:var(--bg3);border:2px solid var(--border2);border-radius:10px;padding:0.85rem 1rem;color:var(--text);font-size:1rem;font-family:var(--font-body);outline:none;transition:border-color .2s;cursor:none}
+#typing-input:focus{border-color:var(--accent)}
+.typing-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.25rem}
+.ts-item{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:center}
+.ts-val{font-family:var(--font-display);font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ts-label{font-size:0.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.25rem}
+/* REGEX */
+.regex-highlight{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:0.9rem;line-height:1.8;word-break:break-word;margin-top:0.75rem;min-height:60px}
+/* HASH */
+.hash-row{display:flex;align-items:center;gap:0.75rem;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;margin-bottom:0.6rem}
+.hash-type{font-size:0.75rem;font-weight:700;color:var(--accent2);font-family:var(--font-mono);min-width:60px;flex-shrink:0}
+.hash-val{font-family:var(--font-mono);font-size:0.72rem;color:var(--text2);word-break:break-all;flex:1}
+/* DIFF */
+.diff-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem;font-family:var(--font-mono);font-size:0.85rem;line-height:1.9;word-break:break-word;min-height:80px;margin-top:0.75rem}
+/* NUMBER BASE */
+.base-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem;margin-top:0.75rem}
+@media(min-width:520px){.base-grid{grid-template-columns:repeat(2,1fr)}}
+.base-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.875rem}
+.base-label{font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.35rem}
+.base-val{font-family:var(--font-mono);font-size:0.9rem;font-weight:600;color:var(--text);word-break:break-all}
+/* RANDOM COLOR */
+.color-swatch-main{height:120px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:1.4rem;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.5);margin-bottom:1rem;transition:background .3s;cursor:none}
+.color-palette-row{display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap}
+.color-swatch{flex:1;min-width:44px;height:48px;border-radius:8px;cursor:none;transition:.2s;border:2px solid transparent}
+.color-swatch:hover{transform:scale(1.1)}
+</style>
+</head>
+<body>
+<div id="cursor"></div><div id="cursor-ring"></div>
+<canvas id="bg-canvas"></canvas>
+<div id="toast"><span id="toast-icon">✓</span><span id="toast-msg">Done!</span></div>
+<nav>
+  <a class="nav-logo" href="index.html">NEXUS<span>.</span></a>
+  <div class="nav-right">
+    <a class="nav-back" href="index.html">← Back to All Tools</a>
+    <div class="nav-theme" onclick="toggleTheme()">🌙</div>
+  </div>
+</nav>
+<div class="site-wrap"><div class="page-container">
+
+  <div class="breadcrumb fadeUp">
+    <a href="index.html">Home</a><span class="breadcrumb-sep">›</span>
+    <a href="index.html#categories">Tech</a><span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-cur">Text Diff Checker</span>
+  </div>
+
+  <div class="tool-header fadeUp fadeUp-d1">
+    <div class="tool-header-icon" style="background:rgba(91,141,238,0.12)">⟺</div>
+    <div>
+      <div class="tool-header-badge" style="background:rgba(91,141,238,0.12);color:#5b8dee;border:1px solid #5b8dee33">Tech · 220K uses</div>
+      <h1>Text Diff Checker</h1>
+      <div class="tool-header-desc">Paste two versions of any text and instantly see word-by-word differences — additions in green, deletions in red.</div>
+      <div class="tool-meta-row"><span>👁 220K uses</span><span>· Tech</span><span>· Free Forever</span></div>
+    </div>
+  </div>
+
+  <div class="tool-card-main fadeUp fadeUp-d2">
+    <div class="tool-card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Original Text</label>
+          <textarea class="form-input" id="diff-a" rows="6" placeholder="Paste original text here…" oninput="computeDiff()">The quick brown fox jumps over the lazy dog.</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modified Text</label>
+          <textarea class="form-input" id="diff-b" rows="6" placeholder="Paste modified text here…" oninput="computeDiff()">The quick red fox jumps over the very lazy cat.</textarea>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="computeDiff()">Compare</button>
+      <div style="margin-top:1.25rem">
+        <div class="form-label" style="margin-bottom:0.5rem">Diff Result</div>
+        <div class="diff-box" id="diff-output"></div>
+        <div id="diff-stats" style="margin-top:0.6rem;font-size:0.8rem;color:var(--text3);display:flex;gap:1rem;flex-wrap:wrap"></div>
+      </div></div>
+  </div>
+
+<div class="info-section fadeUp fadeUp-d3">
+    <h2>⟺ How the Diff Works</h2>
+    <p>This tool compares two texts at the <strong>word level</strong> using the LCS (Longest Common Subsequence) algorithm — the same algorithm used by git diff.</p>
+    <ul>
+      <li><span style="background:rgba(47,215,113,0.2);color:var(--green);padding:1px 6px;border-radius:3px;font-size:0.85rem">+green</span> — words added in the modified text</li>
+      <li><span style="background:rgba(240,99,90,0.2);color:var(--red);padding:1px 6px;border-radius:3px;font-size:0.85rem;text-decoration:line-through">-red</span> — words removed from the original</li>
+      <li>Unchanged words appear in normal text</li>
+    </ul>
+    <div class="highlight-box">💡 Great for comparing document drafts, code snippets, essay revisions, or any two versions of text.</div>
+  </div>
+<div class="info-section"><h2>🛠️ Other Tech Tools</h2><div class="related-tools"><a class="related-card" href="base64-encoder.html"><div class="related-icon">⚡</div><div><div class="related-name">Base64 Encoder/Decoder</div><div class="related-cat">Tech</div></div></a><a class="related-card" href="typing-speed-test.html"><div class="related-icon">⌨️</div><div><div class="related-name">Typing Speed Test</div><div class="related-cat">Tech</div></div></a><a class="related-card" href="regex-tester.html"><div class="related-icon">🔍</div><div><div class="related-name">Regex Tester</div><div class="related-cat">Tech</div></div></a><a class="related-card" href="number-base-converter.html"><div class="related-icon">🔢</div><div><div class="related-name">Number Base Converter</div><div class="related-cat">Tech</div></div></a><a class="related-card" href="hash-generator.html"><div class="related-icon">#</div><div><div class="related-name">Hash Generator</div><div class="related-cat">Tech</div></div></a></div></div>
+</div></div>
+<script>
+const cursor=document.getElementById('cursor'),cursorRing=document.getElementById('cursor-ring');
+let curX=0,curY=0,ringX=0,ringY=0;
+document.addEventListener('mousemove',e=>{curX=e.clientX;curY=e.clientY;cursor.style.left=curX+'px';cursor.style.top=curY+'px'});
+function animRing(){ringX+=(curX-ringX)*0.12;ringY+=(curY-ringY)*0.12;cursorRing.style.left=ringX+'px';cursorRing.style.top=ringY+'px';requestAnimationFrame(animRing)}
+animRing();
+document.addEventListener('mousedown',()=>{cursor.style.width='6px';cursor.style.height='6px'});
+document.addEventListener('mouseup',()=>{cursor.style.width='10px';cursor.style.height='10px'});
+(function(){
+  const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');
+  let W,H,particles=[];
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<60;i++)particles.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.4+.1});
+  function draw(){ctx.clearRect(0,0,W,H);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(91,141,238,${p.o})`;ctx.fill()});ctx.strokeStyle='rgba(255,255,255,0.02)';ctx.lineWidth=1;for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}requestAnimationFrame(draw);}draw();
+})();
+let isLight=false;
+function toggleTheme(){isLight=!isLight;document.body.classList.toggle('light-mode',isLight);document.querySelector('.nav-theme').textContent=isLight?'☀️':'🌙';localStorage.setItem('nx-theme',isLight?'light':'dark')}
+if(localStorage.getItem('nx-theme')==='light')toggleTheme();
+function showToast(msg,icon='✓'){document.getElementById('toast-msg').textContent=msg;document.getElementById('toast-icon').textContent=icon;const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function copyResult(text){navigator.clipboard.writeText(text).then(()=>showToast('Copied!','📋'));}
+function hoverCursor(){document.querySelectorAll('button,a,select,input').forEach(el=>{el.addEventListener('mouseenter',()=>{cursorRing.style.width='54px';cursorRing.style.height='54px';cursorRing.style.borderColor='rgba(91,141,238,0.8)'});el.addEventListener('mouseleave',()=>{cursorRing.style.width='36px';cursorRing.style.height='36px';cursorRing.style.borderColor='rgba(91,141,238,0.5)'});})}
+
+function computeDiff(){
+  const a=(document.getElementById("diff-a")?.value||"").split(/\s+/).filter(Boolean);
+  const b=(document.getElementById("diff-b")?.value||"").split(/\s+/).filter(Boolean);
+  const n=a.length,m=b.length;
+  const dp=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+  for(let i=1;i<=n;i++)for(let j=1;j<=m;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);
+  const result=[];let i=n,j=m;
+  while(i>0||j>0){
+    if(i>0&&j>0&&a[i-1]===b[j-1]){result.unshift({type:"same",val:a[i-1]});i--;j--;}
+    else if(j>0&&(i===0||dp[i][j-1]>=dp[i-1][j])){result.unshift({type:"add",val:b[j-1]});j--;}
+    else{result.unshift({type:"del",val:a[i-1]});i--;}
+  }
+  const html=result.map(w=>{
+    if(w.type==="same")return`<span>${w.val} </span>`;
+    if(w.type==="add")return`<span style="background:rgba(47,215,113,0.2);color:var(--green);border-radius:3px;padding:0 3px">+${w.val} </span>`;
+    return`<span style="background:rgba(240,99,90,0.2);color:var(--red);text-decoration:line-through;border-radius:3px;padding:0 3px">-${w.val} </span>`;
+  }).join("");
+  const adds=result.filter(w=>w.type==="add").length;
+  const dels=result.filter(w=>w.type==="del").length;
+  const same=result.filter(w=>w.type==="same").length;
+  const el=document.getElementById("diff-output");
+  if(el)el.innerHTML=html||"<span style='color:var(--text3)'>Texts are identical — no differences found</span>";
+  const st=document.getElementById("diff-stats");
+  if(st)st.innerHTML=`<span style="color:var(--green)">+${adds} added</span><span style="color:var(--red)">-${dels} removed</span><span>${same} unchanged</span>`;
+}
+computeDiff();
+hoverCursor();
+</script>
+</body>
+</html>

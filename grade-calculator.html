@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NEXUS Grade Calculator — Calculate your GPA and letter grade for all subjects. Add subjects, enter marks, and get your overall score instantly.">
+<title>Grade Calculator — NEXUS Education Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #040508; --bg2: #080b12; --bg3: #0c1020;
+  --surface: rgba(255,255,255,0.035); --surface2: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf0; --text2: #8b90a8; --text3: #555b72;
+  --accent: #5b8dee; --accent2: #7c6dfa; --accent3: #0fe8c8;
+  --green: #2fd771; --red: #f0635a; --amber: #f5a623;
+  --r: 12px; --r2: 18px; --r3: 24px;
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+  --cat-color: rgba(240,99,90,0.1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;overflow-x:hidden;cursor:none;transition:background .4s,color .4s}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s;mix-blend-mode:screen}
+#cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(91,141,238,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.5}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,0.8);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em;text-decoration:none}
+.nav-logo span{-webkit-text-fill-color:var(--accent3)}
+.nav-back{display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.875rem;text-decoration:none;transition:.2s;cursor:none}
+.nav-back:hover{border-color:var(--accent);color:var(--accent)}
+.nav-theme{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;transition:.2s}
+.nav-right{display:flex;align-items:center;gap:0.75rem}
+
+.site-wrap{position:relative;z-index:1;min-height:100vh;padding-top:64px}
+.page-container{max-width:760px;margin:0 auto;padding:4rem 2rem 6rem}
+
+.breadcrumb{display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--text3);margin-bottom:2.5rem;flex-wrap:wrap}
+.breadcrumb a{color:var(--text3);text-decoration:none;transition:.15s;cursor:none}
+.breadcrumb a:hover{color:var(--accent)}
+.breadcrumb-sep{opacity:0.4}
+.breadcrumb-cur{color:var(--text2)}
+
+.tool-header{display:flex;align-items:flex-start;gap:1.25rem;margin-bottom:2.5rem;padding:2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r3)}
+.tool-header-icon{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;background:var(--cat-color)}
+.tool-header-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:100px;background:rgba(47,215,113,0.12);color:var(--green);border:1px solid rgba(47,215,113,0.25);margin-bottom:0.5rem}
+.tool-header h1{font-family:var(--font-display);font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.4rem}
+.tool-header-desc{color:var(--text2);font-size:0.9375rem}
+.tool-meta-row{display:flex;gap:1.25rem;margin-top:0.75rem;font-size:0.78rem;color:var(--text3)}
+
+.tool-card-main{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden;margin-bottom:2rem}
+.tool-card-body{padding:2rem}
+
+/* SUBJECT TABLE */
+.subject-header{display:grid;grid-template-columns:2fr 1fr 1fr 40px;gap:0.75rem;margin-bottom:0.5rem}
+.subject-header-label{font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-weight:600}
+.subject-row{display:grid;grid-template-columns:2fr 1fr 1fr 40px;gap:0.75rem;align-items:center;margin-bottom:0.75rem}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.65rem 0.875rem;color:var(--text);font-size:0.9rem;font-family:var(--font-body);outline:none;transition:border-color .2s;cursor:none}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,0.12)}
+.form-input::placeholder{color:var(--text3)}
+.remove-btn{width:34px;height:34px;border-radius:8px;background:rgba(240,99,90,0.1);border:1px solid rgba(240,99,90,0.2);color:var(--red);cursor:none;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:.2s;flex-shrink:0}
+.remove-btn:hover{background:rgba(240,99,90,0.2)}
+.add-subject-btn{display:flex;align-items:center;gap:0.5rem;padding:0.6rem 1rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.85rem;font-family:var(--font-body);cursor:none;transition:.2s;margin-top:0.25rem}
+.add-subject-btn:hover{border-color:var(--accent);color:var(--accent)}
+.divider{height:1px;background:var(--border);margin:1.25rem 0}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.875rem 1.5rem;border-radius:10px;font-size:0.9375rem;font-weight:500;font-family:var(--font-body);cursor:none;transition:all .2s;border:none;outline:none;width:100%}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,141,238,0.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(91,141,238,0.4)}
+
+.result-box{background:rgba(91,141,238,0.06);border:1px solid rgba(91,141,238,0.2);border-radius:var(--r);padding:1.5rem;margin-top:1.5rem;display:none}
+.result-box.show{display:block}
+.result-label{font-size:0.8rem;color:var(--accent);font-weight:500;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em}
+.result-val{font-family:var(--font-display);font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.result-sub{font-size:0.9rem;color:var(--text2);margin-top:0.4rem}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-top:1rem}
+.result-item{background:var(--bg3);border-radius:10px;padding:0.875rem}
+.ri-label{font-size:0.72rem;color:var(--text3);margin-bottom:0.25rem;text-transform:uppercase;letter-spacing:0.06em}
+.ri-val{font-size:1rem;font-weight:600;color:var(--text)}
+
+/* Per-subject breakdown */
+.subject-breakdown{margin-top:1rem;display:flex;flex-direction:column;gap:0.5rem}
+.subject-breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.75rem;background:var(--bg3);border-radius:8px;font-size:0.85rem}
+.sub-name{color:var(--text2)}
+.sub-pct{font-weight:600;color:var(--accent);font-family:var(--font-mono);font-size:0.8rem}
+.sub-bar-wrap{flex:1;height:4px;background:var(--bg);border-radius:2px;margin:0 0.75rem;overflow:hidden}
+.sub-bar{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width .6s ease}
+
+.info-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:2rem;margin-bottom:1.5rem}
+.info-section h2{font-family:var(--font-display);font-size:1.25rem;font-weight:700;margin-bottom:1rem}
+.info-section p{color:var(--text2);font-size:0.9rem;line-height:1.75;margin-bottom:0.75rem}
+.info-section ul{padding-left:1.25rem;color:var(--text2);font-size:0.9rem;line-height:1.75}
+.info-section ul li{margin-bottom:0.4rem}
+
+.grade-table{width:100%;border-collapse:collapse;margin-top:0.75rem;font-size:0.875rem}
+.grade-table th{text-align:left;padding:0.6rem 0.75rem;font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border)}
+.grade-table td{padding:0.6rem 0.75rem;border-bottom:1px solid var(--border);color:var(--text2)}
+.grade-table tr:last-child td{border-bottom:none}
+.grade-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:0.4rem}
+
+.related-tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1.5rem}
+.related-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem;text-decoration:none;color:inherit;display:flex;align-items:center;gap:0.75rem;transition:.2s;cursor:none}
+.related-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+.related-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;background:var(--surface2)}
+.related-name{font-size:0.875rem;font-weight:600}
+.related-cat{font-size:0.75rem;color:var(--text3)}
+
+#toast{position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:0.875rem 1.25rem;display:flex;align-items:center;gap:0.75rem;font-size:0.875rem;color:var(--text);box-shadow:0 20px 40px rgba(0,0,0,0.4);transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.fadeUp{animation:fadeUp .6s ease both}
+.fadeUp-d1{animation-delay:.1s} .fadeUp-d2{animation-delay:.2s} .fadeUp-d3{animation-delay:.3s}
+
+.light-mode{--bg:#faf8f4;--bg2:#ffffff;--bg3:#f2efe9;--surface:rgba(15,10,5,0.045);--surface2:rgba(15,10,5,0.08);--border:rgba(15,10,5,0.09);--border2:rgba(15,10,5,0.16);--text:#130f0a;--text2:#5a5048;--text3:#a8998a;--accent:#2c5fe3;--accent2:#6c3fd4;--accent3:#00a98a;--green:#1a9e55;--red:#d94040}
+.light-mode nav{background:rgba(250,248,244,0.9)}
+.light-mode .tool-card-main{background:#fff}
+.light-mode #cursor{background:var(--accent)}
+.light-mode #cursor-ring{border-color:rgba(44,95,227,0.45)}
+
+@media(max-width:640px){
+  .page-container{padding:2.5rem 1.25rem 5rem}
+  .tool-header{flex-direction:column;gap:0.875rem;padding:1.5rem}
+  .tool-header h1{font-size:1.4rem}
+  .subject-header{grid-template-columns:1.5fr 1fr 1fr 34px}
+  .subject-row{grid-template-columns:1.5fr 1fr 1fr 34px}
+}
+@media(max-width:420px){
+  .subject-header{display:none}
+  .subject-row{grid-template-columns:1fr 1fr 34px}
+  .subject-row .sub-name-input{grid-column:1 / -2}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="bg-canvas"></canvas>
+<div id="toast"><span id="toast-icon">✓</span><span id="toast-msg">Done!</span></div>
+
+<nav>
+  <a class="nav-logo" href="index.html">NEXUS<span>.</span></a>
+  <div class="nav-right">
+    <a class="nav-back" href="index.html">← Back to All Tools</a>
+    <div class="nav-theme" onclick="toggleTheme()" title="Toggle theme">🌙</div>
+  </div>
+</nav>
+
+<div class="site-wrap">
+<div class="page-container">
+
+  <div class="breadcrumb fadeUp">
+    <a href="index.html">Home</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="index.html#categories">Education</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-cur">Grade Calculator</span>
+  </div>
+
+  <div class="tool-header fadeUp fadeUp-d1">
+    <div class="tool-header-icon">📚</div>
+    <div class="tool-header-text">
+      <div class="tool-header-badge">Education · 310K uses</div>
+      <h1>Grade Calculator</h1>
+      <div class="tool-header-desc">Calculate your overall percentage and letter grade from marks across multiple subjects. Add as many subjects as you need.</div>
+      <div class="tool-meta-row">
+        <span>👁 310K uses</span>
+        <span>· Education</span>
+        <span>· Free Forever</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tool-card-main fadeUp fadeUp-d2">
+    <div class="tool-card-body">
+
+      <div class="subject-header">
+        <div class="subject-header-label">Subject</div>
+        <div class="subject-header-label">Marks Got</div>
+        <div class="subject-header-label">Max Marks</div>
+        <div></div>
+      </div>
+
+      <div id="grade-subjects"></div>
+
+      <button class="add-subject-btn" onclick="addSubject()">+ Add Subject</button>
+
+      <div class="divider"></div>
+
+      <button class="btn btn-primary" onclick="calcGrade()">📊 Calculate Grade</button>
+
+      <div class="result-box" id="grade-result">
+        <div class="result-label">Overall Score</div>
+        <div class="result-val" id="grade-val"></div>
+        <div class="result-sub" id="grade-sub"></div>
+        <div class="result-grid" id="grade-grid"></div>
+        <div class="subject-breakdown" id="grade-breakdown"></div>
+        <button onclick="copyGradeResult()" style="margin-top:1rem;padding:0.5rem 1rem;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:0.8rem;cursor:none;transition:.2s;font-family:var(--font-body)">📋 Copy Result</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-section fadeUp fadeUp-d3">
+    <h2>🏅 Grade Scale Reference</h2>
+    <table class="grade-table">
+      <thead>
+        <tr><th>Percentage</th><th>Grade</th><th>Performance</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="grade-dot" style="background:#2fd771"></span>90% – 100%</td><td>A+</td><td>Exceptional</td></tr>
+        <tr><td><span class="grade-dot" style="background:#5b8dee"></span>80% – 89.99%</td><td>A</td><td>Excellent</td></tr>
+        <tr><td><span class="grade-dot" style="background:#0fe8c8"></span>70% – 79.99%</td><td>B</td><td>Very Good</td></tr>
+        <tr><td><span class="grade-dot" style="background:#f5a623"></span>60% – 69.99%</td><td>C</td><td>Good</td></tr>
+        <tr><td><span class="grade-dot" style="background:#e84d8a"></span>50% – 59.99%</td><td>D</td><td>Pass</td></tr>
+        <tr><td><span class="grade-dot" style="background:#f0635a"></span>Below 50%</td><td>F</td><td>Fail</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="info-section">
+    <h2>💡 Tips for Using This Calculator</h2>
+    <ul>
+      <li>Add all your subjects with the correct max marks (they don't all have to be 100).</li>
+      <li>Use different max marks for subjects with 50, 75, or 150-mark papers.</li>
+      <li>The overall score is a weighted average based on total marks across all subjects.</li>
+      <li>You can use this for any exam — school, college, entrance, or competitive exams.</li>
+    </ul>
+  </div>
+
+  <div class="info-section">
+    <h2>🎓 Other Education Tools</h2>
+    <div class="related-tools">
+      <a class="related-card" href="cgpa-calculator.html">
+        <div class="related-icon">🎓</div>
+        <div><div class="related-name">CGPA to Percentage</div><div class="related-cat">Education</div></div>
+      </a>
+      <a class="related-card" href="percentage-calculator.html">
+        <div class="related-icon" style="font-family:monospace;font-size:0.9rem;font-weight:700;color:var(--text2)">%</div>
+        <div><div class="related-name">Percentage Calculator</div><div class="related-cat">Education</div></div>
+      </a>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const cursor=document.getElementById('cursor'),cursorRing=document.getElementById('cursor-ring');
+let curX=0,curY=0,ringX=0,ringY=0;
+document.addEventListener('mousemove',e=>{curX=e.clientX;curY=e.clientY;cursor.style.left=curX+'px';cursor.style.top=curY+'px'});
+function animRing(){ringX+=(curX-ringX)*0.12;ringY+=(curY-ringY)*0.12;cursorRing.style.left=ringX+'px';cursorRing.style.top=ringY+'px';requestAnimationFrame(animRing)}
+animRing();
+document.addEventListener('mousedown',()=>{cursor.style.width='6px';cursor.style.height='6px'});
+document.addEventListener('mouseup',()=>{cursor.style.width='10px';cursor.style.height='10px'});
+
+(function(){
+  const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');
+  let W,H,particles=[];
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<60;i++)particles.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.4+.1});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(91,141,238,${p.o})`;ctx.fill()});
+    ctx.strokeStyle='rgba(255,255,255,0.02)';ctx.lineWidth=1;
+    for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(let y=0;y<H;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+let isLight=false;
+function toggleTheme(){isLight=!isLight;document.body.classList.toggle('light-mode',isLight);document.querySelector('.nav-theme').textContent=isLight?'☀️':'🌙';localStorage.setItem('nx-theme',isLight?'light':'dark')}
+if(localStorage.getItem('nx-theme')==='light')toggleTheme();
+
+function showToast(msg,icon='✓'){
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast-icon').textContent=icon;
+  const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// SUBJECTS STATE
+let subjects=[
+  {name:'Math',marks:87,max:100},
+  {name:'Science',marks:91,max:100},
+  {name:'English',marks:78,max:100},
+];
+
+function renderSubjects(){
+  const container=document.getElementById('grade-subjects');
+  container.innerHTML=subjects.map((s,i)=>`
+    <div class="subject-row" id="sub-row-${i}">
+      <input class="form-input sub-name-input" placeholder="Subject name" value="${s.name}" oninput="subjects[${i}].name=this.value">
+      <input class="form-input" type="number" placeholder="e.g. 87" value="${s.marks}" min="0" oninput="subjects[${i}].marks=parseFloat(this.value)||0">
+      <input class="form-input" type="number" placeholder="e.g. 100" value="${s.max}" min="1" oninput="subjects[${i}].max=parseFloat(this.value)||100">
+      <button class="remove-btn" onclick="removeSubject(${i})" title="Remove subject">✕</button>
+    </div>
+  `).join('');
+  // Re-attach cursor hover
+  document.querySelectorAll('button,a,[onclick]').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{cursorRing.style.width='54px';cursorRing.style.height='54px'});
+    el.addEventListener('mouseleave',()=>{cursorRing.style.width='36px';cursorRing.style.height='36px'});
+  });
+}
+
+function addSubject(){
+  subjects.push({name:'',marks:0,max:100});
+  renderSubjects();
+  // Focus on new row's name input
+  const inputs=document.querySelectorAll('.sub-name-input');
+  if(inputs.length)inputs[inputs.length-1].focus();
+}
+
+function removeSubject(i){
+  if(subjects.length<=1){showToast('Need at least one subject','⚠️');return;}
+  subjects.splice(i,1);
+  renderSubjects();
+  document.getElementById('grade-result').classList.remove('show');
+}
+
+function calcGrade(){
+  // Read current DOM values
+  const rows=document.querySelectorAll('.subject-row');
+  subjects=[];
+  rows.forEach(row=>{
+    const inputs=row.querySelectorAll('input');
+    subjects.push({
+      name:inputs[0].value||'Subject',
+      marks:parseFloat(inputs[1].value)||0,
+      max:parseFloat(inputs[2].value)||100
+    });
+  });
+
+  let totalMarks=0,totalMax=0;
+  subjects.forEach(s=>{totalMarks+=s.marks;totalMax+=s.max;});
+  if(totalMax===0)return;
+  const pct=totalMarks/totalMax*100;
+
+  let grade,color;
+  if(pct>=90){grade='A+ · Exceptional';color='#2fd771';}
+  else if(pct>=80){grade='A · Excellent';color='#5b8dee';}
+  else if(pct>=70){grade='B · Very Good';color='#0fe8c8';}
+  else if(pct>=60){grade='C · Good';color='#f5a623';}
+  else if(pct>=50){grade='D · Pass';color='#e84d8a';}
+  else{grade='F · Fail';color='#f0635a';}
+
+  document.getElementById('grade-val').textContent=pct.toFixed(1)+'%';
+  document.getElementById('grade-sub').textContent='Grade: '+grade;
+
+  document.getElementById('grade-grid').innerHTML=`
+    <div class="result-item"><div class="ri-label">Total Marks</div><div class="ri-val">${totalMarks} / ${totalMax}</div></div>
+    <div class="result-item"><div class="ri-label">Percentage</div><div class="ri-val">${pct.toFixed(2)}%</div></div>
+    <div class="result-item"><div class="ri-label">Grade</div><div class="ri-val" style="color:${color}">${grade.split(' · ')[0]}</div></div>
+    <div class="result-item"><div class="ri-label">Subjects</div><div class="ri-val">${subjects.length}</div></div>
+  `;
+
+  // Per-subject breakdown
+  document.getElementById('grade-breakdown').innerHTML=subjects.map(s=>{
+    const sp=(s.marks/s.max*100);
+    return `<div class="subject-breakdown-row">
+      <span class="sub-name">${s.name}</span>
+      <div class="sub-bar-wrap"><div class="sub-bar" style="width:${sp}%"></div></div>
+      <span class="sub-pct">${sp.toFixed(1)}%</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('grade-result').classList.add('show');
+}
+
+function copyGradeResult(){
+  const val=document.getElementById('grade-val').textContent;
+  const sub=document.getElementById('grade-sub').textContent;
+  const lines=subjects.map(s=>`${s.name}: ${s.marks}/${s.max} (${(s.marks/s.max*100).toFixed(1)}%)`).join('\n');
+  navigator.clipboard.writeText(`Grade Result: ${val}\n${sub}\n\nSubjects:\n${lines}`).then(()=>showToast('Result copied!','📋'));
+}
+
+// Init
+renderSubjects();
+
+document.querySelectorAll('button,a,[onclick]').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursorRing.style.width='54px';cursorRing.style.height='54px';cursorRing.style.borderColor='rgba(91,141,238,0.8)'});
+  el.addEventListener('mouseleave',()=>{cursorRing.style.width='36px';cursorRing.style.height='36px';cursorRing.style.borderColor='rgba(91,141,238,0.5)'});
+});
+</script>
+</body>
+</html>

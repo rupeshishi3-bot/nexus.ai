@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loan Eligibility Calculator — NEXUS Finance Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#040508;--bg2:#080b12;--bg3:#0c1020;--surface:rgba(255,255,255,0.035);--surface2:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;--accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;--red:#f0635a;--amber:#f5a623;--green:#2fd771;--r:12px;--r2:18px;--r3:24px;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--font-body:'DM Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,0.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;letter-spacing:-.02em}
+.nav-logo span{-webkit-text-fill-color:var(--accent3)}
+.back-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.4rem .9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:.875rem;text-decoration:none;transition:.2s}
+.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+.page-wrap{padding-top:64px;min-height:100vh;display:flex;flex-direction:column}
+.hero{padding:3rem 2rem 2rem;background:radial-gradient(ellipse 800px 400px at 50% 0%,rgba(124,109,250,0.08),transparent);border-bottom:1px solid var(--border);text-align:center}
+.tool-icon-big{width:72px;height:72px;border-radius:20px;background:rgba(124,109,250,0.1);border:1px solid rgba(124,109,250,0.2);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1rem}
+.badge-row{display:inline-flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;justify-content:center}
+.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.28rem .75rem;border-radius:100px;font-size:.78rem;font-weight:500;background:rgba(124,109,250,0.12);border:1px solid rgba(124,109,250,0.25);color:#7c6dfa}
+.tool-title{font-family:var(--font-display);font-size:2.5rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.5rem}
+.tool-desc{color:var(--text2);font-size:1.0625rem;max-width:520px;margin:0 auto 1.5rem}
+.meta-chips{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+.meta-chip{font-size:.78rem;color:var(--text3)}
+.tabs-wrap{padding:1.25rem 2rem;max-width:860px;margin:0 auto;width:100%}
+.fin-tabs{display:flex;gap:.4rem;flex-wrap:wrap;padding:.7rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2)}
+.ftab{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .8rem;border-radius:8px;border:1px solid transparent;color:var(--text2);font-size:.8rem;text-decoration:none;transition:.2s;white-space:nowrap}
+.ftab:hover{background:var(--surface2);border-color:var(--border);color:var(--text)}
+.ftab.active{background:rgba(124,109,250,0.12);border-color:rgba(124,109,250,0.3);color:#7c6dfa}
+.main-content{flex:1;padding:2rem 2rem 3rem;max-width:760px;margin:0 auto;width:100%}
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.card-head{padding:1.5rem;border-bottom:1px solid var(--border);background:rgba(124,109,250,0.06);display:flex;align-items:center;gap:1rem}
+.card-head-icon{width:48px;height:48px;border-radius:14px;background:rgba(124,109,250,0.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.card-head-title{font-family:var(--font-display);font-size:1.2rem;font-weight:700}
+.card-head-sub{font-size:.875rem;color:var(--text2)}
+.card-body{padding:1.75rem}
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:.8125rem;font-weight:500;color:var(--text2);margin-bottom:.4rem}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;color:var(--text);font-size:.9375rem;font-family:var(--font-body);outline:none;transition:border-color .2s,box-shadow .2s}
+.form-input:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(124,109,250,0.12)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:480px){.form-row{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:.8rem 1.5rem;border-radius:10px;font-size:.9375rem;font-weight:500;font-family:var(--font-body);cursor:pointer;transition:all .2s;border:none;outline:none;width:100%}
+.btn-primary{background:linear-gradient(135deg,#7c6dfa,var(--accent));color:#fff;box-shadow:0 4px 20px rgba(124,109,250,0.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,109,250,0.4)}
+.result-box{background:rgba(124,109,250,0.07);border:1px solid rgba(124,109,250,0.22);border-radius:var(--r);padding:1.5rem;margin-top:1.5rem;display:none;animation:fadeUp .35s ease}
+.result-box.show{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.result-label{font-size:.75rem;color:#7c6dfa;font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
+.result-val{font-family:var(--font-display);font-size:2.75rem;font-weight:800;background:linear-gradient(135deg,#7c6dfa,#5b8dee);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.result-sub{font-size:.9rem;color:var(--text2);margin-top:.4rem}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1rem}
+.result-item{background:var(--bg3);border-radius:8px;padding:.875rem}
+.ri-label{font-size:.72rem;color:var(--text3);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.05em}
+.ri-val{font-size:1.05rem;font-weight:600;color:var(--text)}
+/* Eligibility meter */
+.meter-wrap{margin-top:1rem}
+.meter-label-row{display:flex;justify-content:space-between;font-size:.78rem;color:var(--text3);margin-bottom:.35rem}
+.meter-track{background:rgba(255,255,255,0.05);border-radius:100px;height:10px;overflow:hidden}
+.meter-bar{height:100%;border-radius:100px;background:linear-gradient(90deg,#7c6dfa,#0fe8c8);transition:width .6s ease}
+.info-section{margin-top:2rem;display:flex;flex-direction:column;gap:1rem}
+.info-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.5rem}
+.info-card h3{font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:.75rem}
+.info-card p{color:var(--text2);font-size:.9rem;line-height:1.75}
+.highlight{background:rgba(124,109,250,0.07);border:1px solid rgba(124,109,250,0.18);border-radius:10px;padding:1rem 1.25rem;margin:.75rem 0;color:var(--text2);font-size:.9rem;line-height:1.7}
+.other-tools{margin-top:2.5rem}
+.other-tools h3{font-family:var(--font-display);font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--text2)}
+.other-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.75rem}
+.other-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem;text-decoration:none;color:inherit;transition:.3s;display:block}
+.other-card:hover{border-color:var(--border2);transform:translateY(-2px);background:var(--surface2)}
+.other-card-icon{font-size:1.5rem;margin-bottom:.5rem}
+.other-card-name{font-family:var(--font-display);font-size:.875rem;font-weight:700;margin-bottom:.2rem}
+.other-card-desc{font-size:.75rem;color:var(--text3)}
+footer{border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;font-size:.8rem;color:var(--text3)}
+footer a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">NEXUS<span>.</span></a>
+  <a href="index.html" class="back-btn">← All Tools</a>
+</nav>
+<div class="page-wrap">
+  <div class="hero">
+    <div class="tool-icon-big">🏠</div>
+    <div class="badge-row"><span class="badge">💰 Finance</span></div>
+    <h1 class="tool-title">Loan Eligibility</h1>
+    <p class="tool-desc">Check how much loan you qualify for based on your income, obligations and tenure — using the industry-standard FOIR method.</p>
+    <div class="meta-chips">
+      <span class="meta-chip">👁 430K uses</span>
+      <span class="meta-chip">·</span>
+      <span class="meta-chip">🏦 FOIR based</span>
+      <span class="meta-chip">·</span>
+      <span class="meta-chip">🔒 No data stored</span>
+    </div>
+  </div>
+ 
+  <div class="tabs-wrap">
+    <div class="fin-tabs">
+      <a href="emi-calculator.html" class="ftab">📊 EMI</a>
+      <a href="sip-calculator.html" class="ftab">💰 SIP</a>
+      <a href="gst-calculator.html" class="ftab">🧾 GST</a>
+      <a href="fd-calculator.html" class="ftab">🏦 FD</a>
+      <a href="income-tax-calculator.html" class="ftab">📋 Income Tax</a>
+      <a href="salary-calculator.html" class="ftab">💼 Salary</a>
+      <a href="cagr-calculator.html" class="ftab">📈 CAGR</a>
+      <a href="currency-converter.html" class="ftab">💱 Currency</a>
+      <a href="inflation-calculator.html" class="ftab">📉 Inflation</a>
+      <a href="loan-eligibility.html" class="ftab active">🏠 Loan Eligibility</a>
+      <a href="invoice-generator.html" class="ftab">🧾 Invoice</a>
+      <a href="interest-rate-calculator.html" class="ftab">📐 Interest Rate</a>
+    </div>
+  </div>
+ 
+  <div class="main-content">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-icon">🏠</div>
+        <div>
+          <div class="card-head-title">Loan Eligibility Calculator</div>
+          <div class="card-head-sub">FOIR Method · Home / Car / Personal Loan</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Monthly Income (₹)</label>
+            <input class="form-input" id="loan-income" type="number" value="80000" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Existing Monthly Obligations (₹)</label>
+            <input class="form-input" id="loan-obligations" type="number" value="10000" min="0">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Interest Rate (% per annum)</label>
+            <input class="form-input" id="loan-rate" type="number" value="8.5" step="0.1" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Loan Tenure (Years)</label>
+            <input class="form-input" id="loan-tenure" type="number" value="20" min="1" max="30">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="calcLoan()">🏠 Check Loan Eligibility</button>
+ 
+        <div class="result-box" id="loan-result">
+          <div class="result-label">Maximum Loan You're Eligible For</div>
+          <div class="result-val" id="loan-val">—</div>
+          <div class="result-sub" id="loan-sub"></div>
+          <div class="result-grid" id="loan-grid"></div>
+          <div class="meter-wrap" id="loan-meter" style="display:none">
+            <div class="meter-label-row"><span>₹0</span><span id="meter-max"></span></div>
+            <div class="meter-track"><div class="meter-bar" id="meter-bar" style="width:0%"></div></div>
+            <div style="font-size:.75rem;color:var(--text2);margin-top:.35rem" id="meter-label"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="info-section">
+      <div class="info-card">
+        <h3>📐 How Loan Eligibility is Calculated</h3>
+        <p>Banks use the FOIR (Fixed Obligation to Income Ratio) method. Most lenders allow up to 50% of your net monthly income to go toward total EMIs (existing + new loan).</p>
+        <div class="highlight">
+          <strong>Max EMI Allowed</strong> = (Monthly Income − Existing Obligations) × 50%<br>
+          <strong>Eligible Loan</strong> = Max EMI × [(1+r)^n − 1] / [r × (1+r)^n]<br><br>
+          Where r = monthly interest rate, n = total months
+        </div>
+      </div>
+      <div class="info-card">
+        <h3>💡 Tips to Increase Eligibility</h3>
+        <p>Close existing loans or credit card dues before applying. A longer tenure reduces EMI and increases the loan you qualify for — but means more total interest. A credit score above 750 helps you negotiate better rates, which also boosts eligibility.</p>
+      </div>
+      <div class="info-card">
+        <h3>⚠️ This is an Estimate</h3>
+        <p>Actual loan eligibility varies by lender, credit score, employment type (salaried vs self-employed), age, city, and the property/asset being financed. Use this tool for planning — consult your bank for an exact sanction letter.</p>
+      </div>
+    </div>
+ 
+    <div class="other-tools">
+      <h3>Other Finance Tools</h3>
+      <div class="other-grid">
+        <a href="emi-calculator.html" class="other-card"><div class="other-card-icon">📊</div><div class="other-card-name">EMI Calculator</div><div class="other-card-desc">Calculate your loan EMI</div></a>
+        <a href="interest-rate-calculator.html" class="other-card"><div class="other-card-icon">📐</div><div class="other-card-name">Interest Rate Finder</div><div class="other-card-desc">Find hidden interest from EMI</div></a>
+        <a href="salary-calculator.html" class="other-card"><div class="other-card-icon">💼</div><div class="other-card-name">Salary Calculator</div><div class="other-card-desc">In-hand salary & deductions</div></a>
+        <a href="fd-calculator.html" class="other-card"><div class="other-card-icon">🏦</div><div class="other-card-name">FD Calculator</div><div class="other-card-desc">Fixed deposit maturity</div></a>
+      </div>
+    </div>
+  </div>
+  <footer>© 2025 <a href="index.html">NEXUS Tools</a> · Free Finance Tools · No account required · Made with ❤️ in India 🇮🇳</footer>
+</div>
+ 
+<script>
+function fmt(n){return Math.round(n).toLocaleString('en-IN')}
+ 
+function calcLoan(){
+  const income      = parseFloat(document.getElementById('loan-income').value)      || 0;
+  const obligations = parseFloat(document.getElementById('loan-obligations').value) || 0;
+  const annualRate  = parseFloat(document.getElementById('loan-rate').value)        || 0;
+  const years       = parseFloat(document.getElementById('loan-tenure').value)      || 1;
+ 
+  const r = annualRate / 12 / 100;
+  const n = years * 12;
+  const maxEMI = (income - obligations) * 0.5;
+  const eligible = maxEMI * (Math.pow(1+r,n) - 1) / (r * Math.pow(1+r,n));
+  const totalInterest = maxEMI * n - eligible;
+ 
+  document.getElementById('loan-val').textContent = '₹' + fmt(eligible);
+  document.getElementById('loan-sub').textContent = `With max EMI of ₹${fmt(maxEMI)}/month over ${years} years`;
+  document.getElementById('loan-grid').innerHTML = `
+    <div class="result-item"><div class="ri-label">Monthly Income</div><div class="ri-val">₹${fmt(income)}</div></div>
+    <div class="result-item"><div class="ri-label">Max EMI Allowed (50% FOIR)</div><div class="ri-val">₹${fmt(maxEMI)}</div></div>
+    <div class="result-item"><div class="ri-label">Loan Tenure</div><div class="ri-val">${years} years (${n} EMIs)</div></div>
+    <div class="result-item"><div class="ri-label">Total Interest Payable</div><div class="ri-val">₹${fmt(totalInterest)}</div></div>`;
+ 
+  // Meter — show how close to 1 Cr
+  const maxRef = 10000000;
+  const pct = Math.min(eligible / maxRef * 100, 100);
+  document.getElementById('meter-bar').style.width = pct + '%';
+  document.getElementById('meter-max').textContent = '₹1 Cr';
+  document.getElementById('meter-label').textContent = `Your eligibility: ₹${fmt(eligible)} (${pct.toFixed(1)}% of ₹1 Cr)`;
+  document.getElementById('loan-meter').style.display = 'block';
+ 
+  document.getElementById('loan-result').classList.add('show');
+}
+</script>
+</body>
+</html>

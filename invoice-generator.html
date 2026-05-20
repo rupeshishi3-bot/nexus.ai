@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Generator — NEXUS Finance Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#040508;--bg2:#080b12;--bg3:#0c1020;--surface:rgba(255,255,255,0.035);--surface2:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;--accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;--red:#f0635a;--amber:#f5a623;--green:#2fd771;--r:12px;--r2:18px;--r3:24px;--font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--font-body:'DM Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,0.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;letter-spacing:-.02em}
+.nav-logo span{-webkit-text-fill-color:var(--accent3)}
+.back-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.4rem .9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:.875rem;text-decoration:none;transition:.2s}
+.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+.page-wrap{padding-top:64px;min-height:100vh;display:flex;flex-direction:column}
+.hero{padding:3rem 2rem 2rem;background:radial-gradient(ellipse 800px 400px at 50% 0%,rgba(91,141,238,0.08),transparent);border-bottom:1px solid var(--border);text-align:center}
+.tool-icon-big{width:72px;height:72px;border-radius:20px;background:rgba(91,141,238,0.1);border:1px solid rgba(91,141,238,0.2);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1rem}
+.badge-row{display:inline-flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;justify-content:center}
+.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.28rem .75rem;border-radius:100px;font-size:.78rem;font-weight:500}
+.badge-fin{background:rgba(91,141,238,0.12);border:1px solid rgba(91,141,238,0.25);color:#5b8dee}
+.badge-new{background:rgba(47,215,113,0.12);border:1px solid rgba(47,215,113,0.25);color:#2fd771}
+.tool-title{font-family:var(--font-display);font-size:2.5rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.5rem}
+.tool-desc{color:var(--text2);font-size:1.0625rem;max-width:520px;margin:0 auto 1.5rem}
+.meta-chips{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+.meta-chip{font-size:.78rem;color:var(--text3)}
+.tabs-wrap{padding:1.25rem 2rem;max-width:860px;margin:0 auto;width:100%}
+.fin-tabs{display:flex;gap:.4rem;flex-wrap:wrap;padding:.7rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2)}
+.ftab{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .8rem;border-radius:8px;border:1px solid transparent;color:var(--text2);font-size:.8rem;text-decoration:none;transition:.2s;white-space:nowrap}
+.ftab:hover{background:var(--surface2);border-color:var(--border);color:var(--text)}
+.ftab.active{background:rgba(91,141,238,0.12);border-color:rgba(91,141,238,0.3);color:#5b8dee}
+.main-content{flex:1;padding:2rem 2rem 3rem;max-width:860px;margin:0 auto;width:100%}
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.card-head{padding:1.5rem;border-bottom:1px solid var(--border);background:rgba(91,141,238,0.06);display:flex;align-items:center;gap:1rem}
+.card-head-icon{width:48px;height:48px;border-radius:14px;background:rgba(91,141,238,0.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.card-head-title{font-family:var(--font-display);font-size:1.2rem;font-weight:700}
+.card-head-sub{font-size:.875rem;color:var(--text2)}
+.card-body{padding:1.75rem}
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:.8125rem;font-weight:500;color:var(--text2);margin-bottom:.4rem}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;color:var(--text);font-size:.9375rem;font-family:var(--font-body);outline:none;transition:border-color .2s,box-shadow .2s}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,0.12)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:520px){.form-row{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.25rem;border-radius:10px;font-size:.9rem;font-weight:500;font-family:var(--font-body);cursor:pointer;transition:all .2s;border:none;outline:none}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,141,238,0.3);width:100%}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--border2);color:var(--text)}
+ 
+/* Invoice items table */
+.inv-items-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1rem}
+.inv-header{display:grid;grid-template-columns:3fr 1fr 1.5fr 1.5fr 36px;gap:.5rem;padding:.6rem .875rem;background:rgba(255,255,255,0.04);font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em}
+.inv-row-item{display:grid;grid-template-columns:3fr 1fr 1.5fr 1.5fr 36px;gap:.5rem;padding:.5rem .875rem;border-top:1px solid var(--border);align-items:center}
+.inv-row-item input{background:transparent;border:none;outline:none;color:var(--text);font-size:.875rem;font-family:var(--font-body);width:100%}
+.inv-row-item input::placeholder{color:var(--text3)}
+.inv-row-item input[readonly]{color:var(--accent);font-weight:600}
+.del-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:1rem;padding:0;line-height:1;opacity:.7;transition:.2s}
+.del-btn:hover{opacity:1}
+.add-item-btn{width:100%;background:none;border:1px dashed var(--border);border-radius:8px;padding:.65rem;color:var(--text3);font-size:.85rem;cursor:pointer;transition:.2s;margin-bottom:1.25rem}
+.add-item-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* Summary */
+.inv-summary{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem}
+.inv-sum-row{display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;font-size:.9rem;color:var(--text2);border-bottom:1px solid var(--border)}
+.inv-sum-row:last-child{border-bottom:none;font-size:1.05rem;font-weight:700;color:var(--text);padding-top:.75rem;margin-top:.25rem}
+.inv-sum-row:last-child span:last-child{color:var(--accent);font-family:var(--font-mono)}
+/* Print preview */
+@media print{
+  nav,.tabs-wrap,.btn,.add-item-btn,.del-btn,.page-footer,.other-tools,.info-section,footer{display:none!important}
+  body{background:#fff!important;color:#000!important}
+  .page-wrap{padding-top:0}
+  .hero{display:none}
+  .card{box-shadow:none!important;border:1px solid #ddd!important;border-radius:8px!important}
+  .card-body{background:#fff}
+  .form-input,.inv-row-item input{color:#000!important;background:#fff!important}
+  .inv-items-wrap,.inv-summary{border-color:#ddd!important;background:#f8f8f8!important}
+}
+.info-section{margin-top:2rem;display:flex;flex-direction:column;gap:1rem}
+.info-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.5rem}
+.info-card h3{font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:.75rem}
+.info-card p{color:var(--text2);font-size:.9rem;line-height:1.75}
+.other-tools{margin-top:2.5rem}
+.other-tools h3{font-family:var(--font-display);font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--text2)}
+.other-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.75rem}
+.other-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem;text-decoration:none;color:inherit;transition:.3s;display:block}
+.other-card:hover{border-color:var(--border2);transform:translateY(-2px);background:var(--surface2)}
+.other-card-icon{font-size:1.5rem;margin-bottom:.5rem}
+.other-card-name{font-family:var(--font-display);font-size:.875rem;font-weight:700;margin-bottom:.2rem}
+.other-card-desc{font-size:.75rem;color:var(--text3)}
+footer{border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;font-size:.8rem;color:var(--text3)}
+footer a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">NEXUS<span>.</span></a>
+  <a href="index.html" class="back-btn">← All Tools</a>
+</nav>
+<div class="page-wrap">
+  <div class="hero">
+    <div class="tool-icon-big">🧾</div>
+    <div class="badge-row">
+      <span class="badge badge-fin">💰 Finance</span>
+      <span class="badge badge-new">✨ New</span>
+    </div>
+    <h1 class="tool-title">Invoice Generator</h1>
+    <p class="tool-desc">Create clean, professional invoices in seconds with auto GST calculation. Print or save as PDF — no login needed.</p>
+    <div class="meta-chips">
+      <span class="meta-chip">👁 150K uses</span>
+      <span class="meta-chip">·</span>
+      <span class="meta-chip">🖨️ Print-ready</span>
+      <span class="meta-chip">·</span>
+      <span class="meta-chip">🔒 No data stored</span>
+    </div>
+  </div>
+ 
+  <div class="tabs-wrap">
+    <div class="fin-tabs">
+      <a href="emi-calculator.html" class="ftab">📊 EMI</a>
+      <a href="sip-calculator.html" class="ftab">💰 SIP</a>
+      <a href="gst-calculator.html" class="ftab">🧾 GST</a>
+      <a href="fd-calculator.html" class="ftab">🏦 FD</a>
+      <a href="income-tax-calculator.html" class="ftab">📋 Income Tax</a>
+      <a href="salary-calculator.html" class="ftab">💼 Salary</a>
+      <a href="cagr-calculator.html" class="ftab">📈 CAGR</a>
+      <a href="currency-converter.html" class="ftab">💱 Currency</a>
+      <a href="inflation-calculator.html" class="ftab">📉 Inflation</a>
+      <a href="loan-eligibility.html" class="ftab">🏠 Loan Eligibility</a>
+      <a href="invoice-generator.html" class="ftab active">🧾 Invoice</a>
+      <a href="interest-rate-calculator.html" class="ftab">📐 Interest Rate</a>
+    </div>
+  </div>
+ 
+  <div class="main-content">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-icon">🧾</div>
+        <div>
+          <div class="card-head-title">Invoice Generator</div>
+          <div class="card-head-sub">Professional Invoice · GST Included · Print Ready</div>
+        </div>
+      </div>
+      <div class="card-body">
+ 
+        <!-- HEADER FIELDS -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">From (Your Business / Name)</label>
+            <input class="form-input" id="inv-from" placeholder="e.g. Rahul Enterprises">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bill To (Client Name)</label>
+            <input class="form-input" id="inv-to" placeholder="e.g. ABC Corp Pvt Ltd">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Invoice Number</label>
+            <input class="form-input" id="inv-num" value="INV-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input class="form-input" id="inv-date" type="date">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Due Date</label>
+            <input class="form-input" id="inv-due" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">GST Rate (%)</label>
+            <input class="form-input" id="inv-gst" type="number" value="18" min="0" max="100" oninput="recalc()">
+          </div>
+        </div>
+ 
+        <!-- ITEMS TABLE -->
+        <div style="font-size:.8rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.6rem">Line Items</div>
+        <div class="inv-items-wrap">
+          <div class="inv-header">
+            <span>Description</span><span>Qty</span><span>Rate (₹)</span><span>Amount (₹)</span><span></span>
+          </div>
+          <div id="inv-items">
+            <!-- rows injected by JS -->
+          </div>
+        </div>
+        <button class="add-item-btn" onclick="addRow()">+ Add Item</button>
+ 
+        <!-- SUMMARY -->
+        <div class="inv-summary" id="inv-summary">
+          <div class="inv-sum-row"><span>Subtotal</span><span id="sum-sub">₹0</span></div>
+          <div class="inv-sum-row"><span>GST (<span id="gst-label">18</span>%)</span><span id="sum-gst">₹0</span></div>
+          <div class="inv-sum-row"><span>Total Due</span><span id="sum-total">₹0</span></div>
+        </div>
+ 
+        <div style="display:flex;gap:.75rem;margin-top:1.25rem">
+          <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Download PDF</button>
+          <button class="btn btn-secondary" onclick="clearAll()" style="flex-shrink:0">Clear</button>
+        </div>
+ 
+      </div>
+    </div>
+ 
+    <div class="info-section">
+      <div class="info-card">
+        <h3>💡 How to Save as PDF</h3>
+        <p>Click "Print / Download PDF", then in the print dialog choose "Save as PDF" as the destination (available in Chrome, Edge, Firefox). This gives you a clean PDF invoice you can email to your client.</p>
+      </div>
+      <div class="info-card">
+        <h3>🧾 GST on Invoices</h3>
+        <p>If you're a GST-registered business, your invoice must include your GSTIN, HSN/SAC codes, and the tax amount split into CGST + SGST (intra-state) or IGST (inter-state). This simple invoice generator is ideal for small freelancers and service providers who don't need the full GST format yet.</p>
+      </div>
+    </div>
+ 
+    <div class="other-tools">
+      <h3>Other Finance Tools</h3>
+      <div class="other-grid">
+        <a href="gst-calculator.html" class="other-card"><div class="other-card-icon">🧾</div><div class="other-card-name">GST Calculator</div><div class="other-card-desc">GST inclusive & exclusive</div></a>
+        <a href="salary-calculator.html" class="other-card"><div class="other-card-icon">💼</div><div class="other-card-name">Salary Calculator</div><div class="other-card-desc">CTC & in-hand breakdown</div></a>
+        <a href="income-tax-calculator.html" class="other-card"><div class="other-card-icon">📋</div><div class="other-card-name">Income Tax</div><div class="other-card-desc">Tax as per AY 2025-26</div></a>
+        <a href="emi-calculator.html" class="other-card"><div class="other-card-icon">📊</div><div class="other-card-name">EMI Calculator</div><div class="other-card-desc">Loan EMI breakdown</div></a>
+      </div>
+    </div>
+  </div>
+  <footer>© 2025 <a href="index.html">NEXUS Tools</a> · Free Finance Tools · No account required · Made with ❤️ in India 🇮🇳</footer>
+</div>
+ 
+<script>
+let rowCount = 0;
+ 
+// Set today & due date defaults
+(function(){
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inv-date').value = today;
+  const due = new Date(); due.setDate(due.getDate()+30);
+  document.getElementById('inv-due').value = due.toISOString().split('T')[0];
+})();
+ 
+function fmt(n){return Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}
+ 
+function addRow(desc='', qty=1, rate=0){
+  const id = rowCount++;
+  const wrap = document.getElementById('inv-items');
+  const div = document.createElement('div');
+  div.className = 'inv-row-item';
+  div.dataset.id = id;
+  div.innerHTML = `
+    <input placeholder="Service / Product" value="${desc}" oninput="recalc()">
+    <input type="number" value="${qty}" min="0" oninput="recalc()">
+    <input type="number" value="${rate}" min="0" oninput="recalc()">
+    <input readonly value="${rate>0?'₹'+fmt(qty*rate):''}">
+    <button class="del-btn" onclick="this.closest('.inv-row-item').remove();recalc()">✕</button>`;
+  wrap.appendChild(div);
+  recalc();
+}
+ 
+function recalc(){
+  let sub = 0;
+  document.querySelectorAll('#inv-items .inv-row-item').forEach(row=>{
+    const inputs = row.querySelectorAll('input');
+    const qty  = parseFloat(inputs[1].value)||0;
+    const rate = parseFloat(inputs[2].value)||0;
+    const amt  = qty * rate;
+    sub += amt;
+    inputs[3].value = qty>0||rate>0 ? '₹'+fmt(amt) : '';
+  });
+  const gstPct = parseFloat(document.getElementById('inv-gst').value)||0;
+  const gstAmt = sub * gstPct / 100;
+  const total  = sub + gstAmt;
+  document.getElementById('sum-sub').textContent   = '₹'+fmt(sub);
+  document.getElementById('sum-gst').textContent   = '₹'+fmt(gstAmt);
+  document.getElementById('sum-total').textContent = '₹'+fmt(total);
+  document.getElementById('gst-label').textContent = gstPct;
+}
+ 
+function clearAll(){
+  if(!confirm('Clear all invoice data?'))return;
+  document.getElementById('inv-from').value='';
+  document.getElementById('inv-to').value='';
+  document.getElementById('inv-num').value='INV-001';
+  document.getElementById('inv-items').innerHTML='';
+  rowCount=0;
+  addRow();recalc();
+}
+ 
+// Init with 2 default rows
+addRow('Web Design / Development', 1, 25000);
+addRow('Monthly Maintenance', 1, 5000);
+recalc();
+</script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>QR Code Generator — NEXUS Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#040508;--bg2:#080b12;--bg3:#0c1020;--surface:rgba(255,255,255,.035);--surface2:rgba(255,255,255,.06);--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);--text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;--accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;--green:#2fd771;--red:#f0635a;--glow:rgba(91,141,238,.25);--r:12px;--r2:18px;--fd:'Syne',sans-serif;--fm:'Space Mono',monospace;--fb:'DM Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);overflow-x:hidden;cursor:none;transition:background .4s,color .4s;line-height:1.6}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+#cur{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s;mix-blend-mode:screen}
+#ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(91,141,238,.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s}
+#bgc{position:fixed;inset:0;z-index:0;opacity:.5}
+.w{position:relative;z-index:1;min-height:100vh}
+nav{position:fixed;inset:0 0 auto;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,.7);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);transition:background .3s}
+.logo{font-family:var(--fd);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;cursor:none}
+.logo span{-webkit-text-fill-color:var(--accent3)}
+.nr{display:flex;align-items:center;gap:.75rem}
+.back{padding:.4rem .9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:.875rem;text-decoration:none;cursor:none;transition:.2s}.back:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
+.thm{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;transition:.2s}.thm:hover{border-color:var(--accent)}
+main{max-width:700px;margin:0 auto;padding:96px 2rem 5rem}
+@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hdr{margin-bottom:2.5rem;animation:fu .7s ease both}
+.bc{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--text3);margin-bottom:1.25rem;flex-wrap:wrap}
+.bc a{color:var(--text3);text-decoration:none;cursor:none}.bc a:hover{color:var(--accent)}.bc s{opacity:.4}
+.hero{display:flex;align-items:center;gap:1.25rem}
+.ic{width:64px;height:64px;border-radius:18px;background:rgba(15,232,200,.12);border:1px solid rgba(15,232,200,.25);display:flex;align-items:center;justify-content:center;font-size:1.75rem;flex-shrink:0}
+.ttl{font-family:var(--fd);font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:.35rem}
+.sub{color:var(--text2);font-size:.9375rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:2rem;animation:fu .7s ease .1s both}
+.fg{margin-bottom:1.25rem}
+.fl{display:block;font-size:.8125rem;font-weight:500;color:var(--text2);margin-bottom:.4rem}
+.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;color:var(--text);font-size:.9375rem;font-family:var(--fb);outline:none;transition:border-color .2s,box-shadow .2s;cursor:none}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,.15)}
+.fi::placeholder{color:var(--text3)}
+textarea.fi{resize:vertical}
+.rw{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:480px){.rw{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:10px;font-size:.9375rem;font-weight:500;font-family:var(--fb);cursor:none;transition:all .2s;border:none;outline:none}
+.bp{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,141,238,.3)}
+.bp:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(91,141,238,.4)}
+.bs{background:var(--surface2);border:1px solid var(--border2);color:var(--text)}.bs:hover{border-color:var(--accent);color:var(--accent)}
+.bf{width:100%}
+/* Tabs */
+.tab-row{display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.tab-btn{padding:.45rem .9rem;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:.8125rem;cursor:none;transition:.2s}
+.tab-btn.active{background:rgba(15,232,200,.1);border-color:rgba(15,232,200,.35);color:var(--accent3)}
+.tab-btn:hover:not(.active){border-color:var(--border2);color:var(--text)}
+/* QR area */
+.qr-wrap{text-align:center;padding:1.5rem 0}
+.qr-placeholder{width:220px;height:220px;border:1px solid var(--border);border-radius:var(--r);display:inline-flex;align-items:center;justify-content:center;color:var(--text3);font-size:.8rem;background:var(--bg3)}
+.qr-wrap img{border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+/* Color pickers */
+.clr-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem}
+.clr-group label{display:block;font-size:.8125rem;font-weight:500;color:var(--text2);margin-bottom:.4rem}
+.clr-inner{display:flex;align-items:center;gap:.6rem}
+input[type=color]{width:40px;height:40px;border:1px solid var(--border);border-radius:8px;background:none;cursor:none;padding:2px}
+.clr-hex{font-family:var(--fm);font-size:.875rem;color:var(--text2)}
+/* Info */
+.ig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:2rem;animation:fu .7s ease .2s both}
+@media(max-width:560px){.ig{grid-template-columns:1fr}}
+.icard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem}
+.iico{font-size:1.5rem;margin-bottom:.6rem}
+.ittl{font-family:var(--fd);font-size:.875rem;font-weight:700;margin-bottom:.3rem}
+.idesc{font-size:.8rem;color:var(--text3);line-height:1.5}
+#toast{position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:.875rem 1.25rem;display:flex;align-items:center;gap:.75rem;font-size:.875rem;color:var(--text);box-shadow:0 20px 40px rgba(0,0,0,.4);transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+.lm{--bg:#faf8f4;--bg2:#fff;--bg3:#f2efe9;--surface:rgba(15,10,5,.045);--surface2:rgba(15,10,5,.08);--border:rgba(15,10,5,.09);--border2:rgba(15,10,5,.16);--text:#130f0a;--text2:#5a5048;--text3:#a8998a;--accent:#2c5fe3;--accent2:#6c3fd4;--accent3:#00a98a}
+.lm nav{background:rgba(250,248,244,.82)}.lm .card,.lm .icard{background:#fff;border-color:rgba(15,10,5,.09)}
+.lm .tab-btn{background:#f7f5f0;border-color:rgba(15,10,5,.1)}
+.lm .tab-btn.active{background:rgba(0,169,138,.1);border-color:rgba(0,169,138,.3)}
+.lm .qr-placeholder{background:#f7f5f0;border-color:rgba(15,10,5,.1)}
+.lm #toast{background:#fff}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="ring"></div><canvas id="bgc"></canvas>
+<div id="toast"><span id="ti">✓</span> <span id="tm"></span></div>
+<nav id="nav">
+  <a class="logo" href="index.html">NEXUS<span>.</span></a>
+  <div class="nr"><a class="back" href="index.html">← Back to All Tools</a><div class="thm" onclick="toggleTheme()">🌙</div></div>
+</nav>
+<div class="w"><main>
+  <div class="hdr">
+    <div class="bc"><a href="index.html">Home</a><s>›</s><a href="index.html">Productivity</a><s>›</s><span style="color:var(--text2)">QR Code Generator</span></div>
+    <div class="hero"><div class="ic">📱</div><div>
+      <div class="ttl">QR Code Generator</div>
+      <div class="sub">Generate QR codes for URLs, text, WiFi, and contacts instantly</div>
+    </div></div>
+  </div>
+
+  <div class="card">
+    <div class="tab-row" id="qr-tabs">
+      <button class="tab-btn active" onclick="setTab('url',this)">🔗 URL</button>
+      <button class="tab-btn" onclick="setTab('text',this)">📄 Text</button>
+      <button class="tab-btn" onclick="setTab('wifi',this)">📶 WiFi</button>
+      <button class="tab-btn" onclick="setTab('contact',this)">👤 Contact</button>
+    </div>
+
+    <div id="qr-fields"></div>
+
+    <div class="clr-row">
+      <div class="clr-group">
+        <label>QR Color</label>
+        <div class="clr-inner">
+          <input type="color" id="qr-fg" value="#5b8dee" oninput="document.getElementById('fg-hex').textContent=this.value;genQR()">
+          <span class="clr-hex" id="fg-hex">#5b8dee</span>
+        </div>
+      </div>
+      <div class="clr-group">
+        <label>Background Color</label>
+        <div class="clr-inner">
+          <input type="color" id="qr-bg" value="#0c1020" oninput="document.getElementById('bg-hex').textContent=this.value;genQR()">
+          <span class="clr-hex" id="bg-hex">#0c1020</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="qr-wrap" id="qr-output">
+      <div class="qr-placeholder">Generate a QR code</div>
+    </div>
+
+    <button class="btn bs bf" style="margin-top:.75rem" onclick="downloadQR()">⬇ Download PNG</button>
+  </div>
+
+  <div class="ig">
+    <div class="icard"><div class="iico">📱</div><div class="ittl">Scan Anywhere</div><div class="idesc">QR codes work on all smartphones. No app needed — just open your camera and point it at the code.</div></div>
+    <div class="icard"><div class="iico">📶</div><div class="ittl">WiFi Sharing</div><div class="idesc">Generate a WiFi QR so guests can connect instantly — no need to type long passwords.</div></div>
+    <div class="icard"><div class="iico">👤</div><div class="ittl">Digital Business Card</div><div class="idesc">Create a contact QR code and share it at events — scanners add your details to their phone instantly.</div></div>
+  </div>
+</main></div>
+
+<script>
+let lm=localStorage.getItem('nx-theme')==='light';
+if(lm){document.body.classList.add('lm');document.querySelector('.thm').textContent='☀️';}
+function toggleTheme(){lm=!lm;document.body.classList.toggle('lm',lm);document.querySelector('.thm').textContent=lm?'☀️':'🌙';localStorage.setItem('nx-theme',lm?'light':'dark');}
+
+const cur=document.getElementById('cur'),ring=document.getElementById('ring');
+let cx=0,cy=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;cur.style.left=cx+'px';cur.style.top=cy+'px';});
+(function a(){rx+=(cx-rx)*.12;ry+=(cy-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(a);})();
+document.addEventListener('mousedown',()=>{cur.style.width='6px';cur.style.height='6px'});
+document.addEventListener('mouseup',()=>{cur.style.width='10px';cur.style.height='10px'});
+document.querySelectorAll('button,a').forEach(el=>{el.addEventListener('mouseenter',()=>{ring.style.width='54px';ring.style.height='54px';ring.style.borderColor='rgba(91,141,238,.8)'});el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(91,141,238,.5)'});});
+
+(function(){const c=document.getElementById('bgc'),x=c.getContext('2d');let W,H,p=[];function r(){W=c.width=innerWidth;H=c.height=innerHeight}r();addEventListener('resize',r);for(let i=0;i<80;i++)p.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.4+.1});function d(){x.clearRect(0,0,W,H);const lm=document.body.classList.contains('lm');p.forEach(pt=>{pt.x+=pt.vx;pt.y+=pt.vy;if(pt.x<0)pt.x=W;if(pt.x>W)pt.x=0;if(pt.y<0)pt.y=H;if(pt.y>H)pt.y=0;x.beginPath();x.arc(pt.x,pt.y,pt.r,0,Math.PI*2);x.fillStyle=`rgba(${lm?'44,95,227':'91,141,238'},${pt.o})`;x.fill();});x.strokeStyle=lm?'rgba(15,10,5,0.03)':'rgba(255,255,255,0.02)';x.lineWidth=1;for(let i=0;i<W;i+=80){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke();}for(let i=0;i<H;i+=80){x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke();}requestAnimationFrame(d);}d();})();
+
+let _tt;
+function toast(m,ic='✓'){const t=document.getElementById('toast');document.getElementById('tm').textContent=m;document.getElementById('ti').textContent=ic;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2500);}
+window.addEventListener('scroll',()=>{document.getElementById('nav').style.background=scrollY>50?'rgba(4,5,8,.95)':'rgba(4,5,8,.7)';});
+
+let _curTab='url';
+const FIELDS={
+  url:`<div class="fg"><label class="fl">URL</label><input class="fi" id="qr-data" value="https://nexustools.app" oninput="genQR()"></div>`,
+  text:`<div class="fg"><label class="fl">Text</label><textarea class="fi" id="qr-data" rows="4" placeholder="Enter any text..." oninput="genQR()"></textarea></div>`,
+  wifi:`<div class="rw"><div class="fg"><label class="fl">Network Name (SSID)</label><input class="fi" id="qr-ssid" placeholder="WiFi name" oninput="genQRWifi()"></div><div class="fg"><label class="fl">Password</label><input class="fi" id="qr-pass" placeholder="WiFi password" oninput="genQRWifi()"></div></div>`,
+  contact:`<div class="rw"><div class="fg"><label class="fl">Full Name</label><input class="fi" id="qr-name" placeholder="Your Name" oninput="genQRContact()"></div><div class="fg"><label class="fl">Phone Number</label><input class="fi" id="qr-phone" placeholder="+91 9876543210" oninput="genQRContact()"></div></div>`,
+};
+
+function setTab(type,btn){
+  _curTab=type;
+  document.querySelectorAll('#qr-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('qr-fields').innerHTML=FIELDS[type];
+  if(type==='url')genQR();
+  else document.getElementById('qr-output').innerHTML='<div class="qr-placeholder">Fill in the fields above</div>';
+}
+
+function getFgBg(){
+  const fg=document.getElementById('qr-fg').value.replace('#','');
+  const bg=document.getElementById('qr-bg').value.replace('#','');
+  return{fg,bg};
+}
+
+function genQR(data){
+  if(!data){const el=document.getElementById('qr-data');data=el?el.value:'https://nexustools.app';}
+  if(!data||!data.trim())return;
+  const{fg,bg}=getFgBg();
+  const url=`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(data)}&color=${fg}&bgcolor=${bg}&format=png&qzone=2`;
+  document.getElementById('qr-output').innerHTML=`<img src="${url}" id="qr-img" width="240" height="240" style="border-radius:var(--r)" crossorigin="anonymous">`;
+}
+function genQRWifi(){
+  const ssid=document.getElementById('qr-ssid')?.value||'';
+  const pass=document.getElementById('qr-pass')?.value||'';
+  if(!ssid)return;
+  genQR(`WIFI:T:WPA;S:${ssid};P:${pass};;`);
+}
+function genQRContact(){
+  const name=document.getElementById('qr-name')?.value||'';
+  const phone=document.getElementById('qr-phone')?.value||'';
+  if(!name&&!phone)return;
+  genQR(`BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nTEL:${phone}\nEND:VCARD`);
+}
+function downloadQR(){
+  const img=document.getElementById('qr-img');
+  if(!img){toast('Generate a QR code first','⚡');return;}
+  const a=document.createElement('a');a.href=img.src;a.download='nexus-qr.png';a.click();
+  toast('QR Downloaded!','📥');
+}
+
+setTab('url',document.querySelector('#qr-tabs .tab-btn'));
+</script>
+</body></html>

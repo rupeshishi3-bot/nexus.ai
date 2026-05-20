@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NEXUS AI Prompt Generator — Generate perfect prompts for ChatGPT, Midjourney, DALL-E and more. Free AI-powered tool.">
+<title>AI Prompt Generator — NEXUS Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#040508;--bg2:#080b12;--bg3:#0c1020;
+  --surface:rgba(255,255,255,0.035);--surface2:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;
+  --accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;
+  --glow:rgba(91,141,238,0.25);--glow2:rgba(124,109,250,0.2);
+  --r:12px;--r2:18px;--r3:24px;
+  --font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;overflow-x:hidden;cursor:none;transition:background .4s,color .4s}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+
+/* CURSOR */
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s,background .15s;mix-blend-mode:screen}
+#cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(91,141,238,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s,transform .1s}
+
+/* CANVAS */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.5}
+
+/* LAYOUT */
+.site-wrap{position:relative;z-index:1;min-height:100vh}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,0.7);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em;text-decoration:none;cursor:none}
+.nav-logo span{color:var(--accent3);-webkit-text-fill-color:var(--accent3)}
+.nav-right{display:flex;align-items:center;gap:0.75rem}
+.nav-back{display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.875rem;text-decoration:none;cursor:none;transition:.2s}
+.nav-back:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
+.nav-theme{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;transition:.2s}
+.nav-theme:hover{border-color:var(--accent);box-shadow:0 0 12px var(--glow)}
+
+/* MAIN CONTENT */
+.main{max-width:780px;margin:0 auto;padding:96px 2rem 6rem}
+
+/* TOOL HEADER */
+.tool-header{margin-bottom:2.5rem;animation:fadeUp .7s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.tool-breadcrumb{display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--text3);margin-bottom:1.25rem}
+.tool-breadcrumb a{color:var(--text3);text-decoration:none;transition:.2s;cursor:none}
+.tool-breadcrumb a:hover{color:var(--accent)}
+.tool-breadcrumb span{color:var(--text3);opacity:0.5}
+.tool-hero{display:flex;align-items:center;gap:1.25rem}
+.tool-hero-icon{width:64px;height:64px;border-radius:18px;background:rgba(124,109,250,0.15);border:1px solid rgba(124,109,250,0.25);display:flex;align-items:center;justify-content:center;font-size:1.75rem;flex-shrink:0}
+.tool-hero-title{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;letter-spacing:-0.03em;line-height:1.1;margin-bottom:0.35rem}
+.tool-hero-desc{color:var(--text2);font-size:0.9375rem}
+.tool-badge-ai{display:inline-flex;align-items:center;gap:0.4rem;padding:0.25rem 0.7rem;border-radius:100px;background:rgba(124,109,250,0.15);border:1px solid rgba(124,109,250,0.25);color:var(--accent2);font-size:0.7rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-top:0.5rem}
+
+/* CARD */
+.tool-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:2rem;animation:fadeUp .7s ease .1s both}
+
+/* FORM */
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:0.8125rem;font-weight:500;color:var(--text2);margin-bottom:0.4rem;letter-spacing:0.01em}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;transition:border-color .2s,box-shadow .2s;cursor:none}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,0.15)}
+.form-input::placeholder{color:var(--text3)}
+textarea.form-input{resize:vertical;min-height:100px}
+.form-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;cursor:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b90a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem 1.5rem;border-radius:10px;font-size:0.9375rem;font-weight:500;font-family:var(--font-body);cursor:none;transition:all .2s;border:none;outline:none;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,141,238,0.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(91,141,238,0.4)}
+.btn-primary:active{transform:translateY(0)}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border2);color:var(--text)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-full{width:100%}
+.btn-sm{padding:0.5rem 1rem;font-size:0.875rem}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:1.5rem 0}
+
+/* RESULT */
+.result-box{background:rgba(124,109,250,0.06);border:1px solid rgba(124,109,250,0.2);border-radius:var(--r);padding:1.5rem;margin-top:1.5rem;display:none}
+.result-box.show{display:block;animation:fadeUp .4s ease}
+.result-label{font-size:0.75rem;color:var(--accent2);font-weight:600;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.1em;display:flex;align-items:center;gap:0.4rem}
+.result-text{color:var(--text);line-height:1.8;font-size:0.9375rem;white-space:pre-wrap;word-break:break-word}
+.result-actions{display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap}
+
+/* LOADING */
+.loading-wrap{display:none;text-align:center;padding:2rem 0}
+.loading-dots{display:inline-flex;gap:5px;align-items:center}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);animation:aiDot 1.2s ease infinite}
+.ai-dot:nth-child(2){animation-delay:.2s}.ai-dot:nth-child(3){animation-delay:.4s}
+@keyframes aiDot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+.loading-text{font-size:0.8rem;color:var(--text3);margin-top:0.6rem}
+
+/* INFO GRID */
+.info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:2rem;animation:fadeUp .7s ease .2s both}
+@media(max-width:540px){.info-grid{grid-template-columns:1fr}}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem}
+.info-icon{font-size:1.5rem;margin-bottom:0.6rem}
+.info-title{font-family:var(--font-display);font-size:0.875rem;font-weight:700;margin-bottom:0.3rem}
+.info-desc{font-size:0.8rem;color:var(--text3);line-height:1.5}
+
+/* TOAST */
+#toast{position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:0.875rem 1.25rem;display:flex;align-items:center;gap:0.75rem;font-size:0.875rem;color:var(--text);box-shadow:0 20px 40px rgba(0,0,0,0.4);transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+
+/* LIGHT MODE */
+.light-mode{--bg:#faf8f4;--bg2:#fff;--bg3:#f2efe9;--surface:rgba(15,10,5,0.045);--surface2:rgba(15,10,5,0.08);--border:rgba(15,10,5,0.09);--border2:rgba(15,10,5,0.16);--text:#130f0a;--text2:#5a5048;--text3:#a8998a;--accent:#2c5fe3;--accent2:#6c3fd4;--accent3:#00a98a}
+.light-mode nav{background:rgba(250,248,244,0.82);border-bottom-color:rgba(15,10,5,0.1)}
+.light-mode .tool-card{background:#fff;border-color:rgba(15,10,5,0.09);box-shadow:0 2px 12px rgba(15,10,5,0.06)}
+.light-mode .info-card{background:#fff;border-color:rgba(15,10,5,0.09)}
+.light-mode .result-box{background:rgba(108,63,212,0.05);border-color:rgba(108,63,212,0.2)}
+.light-mode #toast{background:#fff;border-color:rgba(15,10,5,0.12)}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="bg-canvas"></canvas>
+<div id="toast"><span id="toast-icon">✓</span> <span id="toast-msg">Copied!</span></div>
+
+<nav id="main-nav">
+  <a class="nav-logo" href="index.html">NEXUS<span>.</span></a>
+  <div class="nav-right">
+    <a class="nav-back" href="index.html">← Back to All Tools</a>
+    <div class="nav-theme" onclick="toggleTheme()" title="Toggle theme">🌙</div>
+  </div>
+</nav>
+
+<div class="site-wrap">
+  <main class="main">
+
+    <!-- HEADER -->
+    <div class="tool-header">
+      <div class="tool-breadcrumb">
+        <a href="index.html">Home</a>
+        <span>›</span>
+        <a href="index.html#categories">AI Tools</a>
+        <span>›</span>
+        <span style="color:var(--text2)">AI Prompt Generator</span>
+      </div>
+      <div class="tool-hero">
+        <div class="tool-hero-icon">✨</div>
+        <div>
+          <div class="tool-hero-title">AI Prompt Generator</div>
+          <div class="tool-hero-desc">Generate perfect prompts for ChatGPT, Midjourney, DALL-E, and more</div>
+          <div class="tool-badge-ai">✦ AI Powered</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOL CARD -->
+    <div class="tool-card">
+      <div class="form-group">
+        <label class="form-label">What do you want to create or achieve?</label>
+        <textarea class="form-input" id="ai-topic" rows="4" placeholder="e.g. a futuristic city at sunset, a REST API for e-commerce, viral Instagram post about fitness…"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Prompt Type</label>
+          <select class="form-select" id="ai-type">
+            <option value="image">Image Generation (Midjourney / DALL-E)</option>
+            <option value="code">Code Generation (ChatGPT / Claude)</option>
+            <option value="marketing">Marketing Copy</option>
+            <option value="story">Creative Writing / Storytelling</option>
+            <option value="seo">SEO Blog Post Outline</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Detail Level</label>
+          <select class="form-select" id="ai-detail">
+            <option value="detailed">Detailed & Professional</option>
+            <option value="concise">Short & Punchy</option>
+            <option value="structured">Structured with Sections</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="gen-btn" onclick="genAIPrompt()">✨ Generate Prompt with AI</button>
+
+      <!-- Loading -->
+      <div class="loading-wrap" id="loading">
+        <div class="loading-dots">
+          <div class="ai-dot"></div>
+          <div class="ai-dot"></div>
+          <div class="ai-dot"></div>
+        </div>
+        <div class="loading-text">AI is crafting your perfect prompt…</div>
+      </div>
+
+      <!-- Result -->
+      <div class="result-box" id="result">
+        <div class="result-label">✦ AI-Generated Prompt</div>
+        <div class="result-text" id="prompt-output"></div>
+        <div class="result-actions">
+          <button class="btn btn-secondary btn-sm" onclick="copyPrompt()">📋 Copy Prompt</button>
+          <button class="btn btn-secondary btn-sm" onclick="genAIPrompt()">↻ Regenerate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INFO CARDS -->
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">🎨</div>
+        <div class="info-title">Image Prompts</div>
+        <div class="info-desc">Craft detailed prompts for Midjourney, DALL-E, Stable Diffusion with style modifiers.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">💻</div>
+        <div class="info-title">Code Prompts</div>
+        <div class="info-desc">Get precise, structured coding prompts for ChatGPT or Claude with clear requirements.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">📣</div>
+        <div class="info-title">Marketing Prompts</div>
+        <div class="info-desc">Generate high-converting copy prompts with audience targeting and emotional triggers.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── THEME ──
+let isLight = localStorage.getItem('nx-theme') === 'light';
+if(isLight){document.body.classList.add('light-mode');document.querySelector('.nav-theme').textContent='☀️';}
+function toggleTheme(){
+  isLight=!isLight;
+  document.body.classList.toggle('light-mode',isLight);
+  document.querySelector('.nav-theme').textContent=isLight?'☀️':'🌙';
+  localStorage.setItem('nx-theme',isLight?'light':'dark');
+}
+
+// ── CURSOR ──
+const cursor=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let cx=0,cy=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;cursor.style.left=cx+'px';cursor.style.top=cy+'px';});
+(function animRing(){rx+=(cx-rx)*0.12;ry+=(cy-ry)*0.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);})();
+document.addEventListener('mousedown',()=>{cursor.style.width='6px';cursor.style.height='6px'});
+document.addEventListener('mouseup',()=>{cursor.style.width='10px';cursor.style.height='10px'});
+document.querySelectorAll('button,a,[onclick]').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ring.style.width='54px';ring.style.height='54px';ring.style.borderColor='rgba(91,141,238,0.8)'});
+  el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(91,141,238,0.5)'});
+});
+
+// ── CANVAS ──
+(function(){
+  const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<80;i++)pts.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.4+.1});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const lm=document.body.classList.contains('light-mode');
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(${lm?'44,95,227':'91,141,238'},${p.o})`;ctx.fill();});
+    ctx.strokeStyle=lm?'rgba(15,10,5,0.035)':'rgba(255,255,255,0.02)';ctx.lineWidth=1;
+    for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── TOAST ──
+let _tt;
+function showToast(msg,icon='✓'){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast-icon').textContent=icon;
+  t.classList.add('show');clearTimeout(_tt);
+  _tt=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── CORE LOGIC ──
+async function genAIPrompt(){
+  const topic=(document.getElementById('ai-topic').value||'').trim()||'a beautiful landscape';
+  const type=document.getElementById('ai-type').value;
+  const detail=document.getElementById('ai-detail').value;
+
+  document.getElementById('gen-btn').style.display='none';
+  document.getElementById('loading').style.display='block';
+  document.getElementById('result').classList.remove('show');
+
+  const typeGuides={
+    image:`Generate a highly detailed, professional image generation prompt for Midjourney or DALL-E. Include: artistic style, lighting, mood, camera angle, color palette, quality modifiers. Topic: "${topic}"`,
+    code:`Generate a clear, precise prompt for an AI coding assistant (ChatGPT/Claude) to write clean production code. Include context, requirements, error handling expectations, and output format. Topic: "${topic}"`,
+    marketing:`Generate a compelling marketing copywriting prompt to create high-converting content. Include target audience, tone, key benefits, emotional triggers, and CTA guidance. Topic: "${topic}"`,
+    story:`Generate a rich creative writing prompt with character details, setting, conflict, tone, and narrative direction. Topic: "${topic}"`,
+    seo:`Generate a detailed SEO blog post outline prompt including target keyword, audience, key sections, H2/H3 structure, and meta description guidance. Topic: "${topic}"`,
+  };
+  const detailGuide={
+    detailed:'Make it highly detailed and professional.',
+    concise:'Keep it short, punchy, and impactful.',
+    structured:'Format it with clear numbered sections.',
+  };
+
+  try{
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",max_tokens:500,
+        messages:[{role:"user",content:`${typeGuides[type]} ${detailGuide[detail]} Output only the final prompt text, nothing else — no intro, no labels, just the prompt itself.`}]
+      })
+    });
+    const data=await resp.json();
+    const prompt=data.content?.[0]?.text||'Unable to generate prompt. Please try again.';
+    document.getElementById('prompt-output').textContent=prompt;
+    document.getElementById('result').classList.add('show');
+  }catch(e){
+    document.getElementById('prompt-output').textContent='Connection error. Please try again.';
+    document.getElementById('result').classList.add('show');
+  }
+
+  document.getElementById('gen-btn').style.display='';
+  document.getElementById('loading').style.display='none';
+}
+
+function copyPrompt(){
+  const text=document.getElementById('prompt-output').textContent;
+  navigator.clipboard.writeText(text).then(()=>showToast('Prompt copied!','📋')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('Prompt copied!','📋');
+  });
+}
+
+// Nav scroll effect
+window.addEventListener('scroll',()=>{document.getElementById('main-nav').style.background=window.scrollY>50?'rgba(4,5,8,0.95)':'rgba(4,5,8,0.7)';});
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Water Intake Calculator — NEXUS Health Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #040508; --bg2: #080b12; --bg3: #0c1020;
+  --surface: rgba(255,255,255,0.035); --surface2: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf0; --text2: #8b90a8; --text3: #555b72;
+  --accent: #5b8dee; --accent2: #7c6dfa; --accent3: #0fe8c8;
+  --red: #f0635a; --amber: #f5a623; --green: #2fd771;
+  --r: 12px; --r2: 18px; --r3: 24px;
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;min-height:100vh;}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em;text-decoration:none;}
+.nav-logo span{color:var(--accent3);-webkit-text-fill-color:var(--accent3)}
+.back-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.4rem 0.9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.875rem;text-decoration:none;transition:.2s;}
+.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+.health-tabs{display:flex;gap:0.5rem;padding:0.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);flex-wrap:wrap;}
+.htab{display:inline-flex;align-items:center;gap:0.4rem;padding:0.45rem 0.9rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:0.8375rem;text-decoration:none;transition:.2s;white-space:nowrap;}
+.htab:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
+.htab.active{background:rgba(91,141,238,0.12);border-color:rgba(91,141,238,0.3);color:#5b8dee;}
+.page-wrap{padding-top:64px;min-height:100vh;display:flex;flex-direction:column;}
+.hero-section{padding:3rem 2rem 2rem;background:radial-gradient(ellipse 800px 400px at 50% 0%, rgba(91,141,238,0.08), transparent);border-bottom:1px solid var(--border);text-align:center;}
+.tool-badge-chip{display:inline-flex;align-items:center;gap:0.4rem;padding:0.3rem 0.8rem;border-radius:100px;font-size:0.8rem;font-weight:500;margin:0 0.25rem 1rem;}
+.tool-icon-big{width:72px;height:72px;border-radius:20px;background:rgba(91,141,238,0.1);border:1px solid rgba(91,141,238,0.2);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1rem;}
+.tool-title{font-family:var(--font-display);font-size:2.5rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:0.5rem;}
+.tool-desc{color:var(--text2);font-size:1.0625rem;max-width:500px;margin:0 auto 1.5rem;}
+.meta-chips{display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;}
+.meta-chip{font-size:0.78rem;color:var(--text3);display:flex;align-items:center;gap:0.3rem;}
+.main-content{flex:1;padding:2.5rem 2rem;max-width:760px;margin:0 auto;width:100%;}
+.tool-card-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.card-header{padding:1.5rem;border-bottom:1px solid var(--border);background:rgba(91,141,238,0.06);display:flex;align-items:center;gap:1rem;}
+.card-header-icon{width:48px;height:48px;border-radius:14px;background:rgba(91,141,238,0.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;}
+.card-header-title{font-family:var(--font-display);font-size:1.2rem;font-weight:700;}
+.card-header-sub{font-size:0.875rem;color:var(--text2);}
+.card-body{padding:1.75rem;}
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:0.8125rem;font-weight:500;color:var(--text2);margin-bottom:0.4rem;letter-spacing:0.01em;}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;transition:border-color .2s,box-shadow .2s;}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,141,238,0.15)}
+.form-input::placeholder{color:var(--text3)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:480px){.form-row{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.8rem 1.5rem;border-radius:10px;font-size:0.9375rem;font-weight:500;font-family:var(--font-body);cursor:pointer;transition:all .2s;border:none;outline:none;width:100%;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,141,238,0.3);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(91,141,238,0.4)}
+.result-box{background:rgba(91,141,238,0.06);border:1px solid rgba(91,141,238,0.2);border-radius:var(--r);padding:1.5rem;margin-top:1.5rem;display:none;animation:fadeIn .35s ease;}
+.result-box.show{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.result-label{font-size:0.78rem;color:var(--accent);font-weight:500;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.75rem;}
+.result-val{font-family:var(--font-display);font-size:2.75rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.result-sub{font-size:0.875rem;color:var(--text2);margin-top:0.35rem;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem;}
+.result-item{background:var(--bg3);border-radius:8px;padding:0.75rem;}
+.ri-label{font-size:0.75rem;color:var(--text3);margin-bottom:0.2rem;}
+.ri-val{font-size:1.0625rem;font-weight:600;color:var(--text);}
+
+/* WATER TRACKER */
+.water-tracker{margin-top:1.25rem;background:var(--bg3);border-radius:var(--r);padding:1.25rem;display:none;}
+.water-tracker.show{display:block;}
+.tracker-title{font-size:0.78rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.875rem;}
+.glass-grid{display:flex;flex-wrap:wrap;gap:0.5rem;}
+.glass-btn{width:40px;height:40px;border-radius:8px;border:1.5px solid rgba(91,141,238,0.25);background:transparent;font-size:1.2rem;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;}
+.glass-btn.filled{background:rgba(91,141,238,0.2);border-color:rgba(91,141,238,0.5);}
+.glass-btn:hover{border-color:var(--accent);}
+.tracker-progress{margin-top:1rem;}
+.tracker-bar-wrap{background:rgba(255,255,255,0.05);border-radius:100px;height:8px;overflow:hidden;margin-top:0.35rem;}
+.tracker-bar{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width .4s ease;}
+.tracker-status{font-size:0.8rem;color:var(--text2);margin-top:0.35rem;}
+
+.info-section{margin-top:2rem;}
+.info-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.5rem;margin-bottom:1rem;}
+.info-card h3{font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;}
+.info-card p{color:var(--text2);font-size:0.9rem;line-height:1.75;}
+.highlight-box{background:rgba(91,141,238,0.07);border:1px solid rgba(91,141,238,0.18);border-radius:10px;padding:1rem 1.25rem;margin:0.75rem 0;color:var(--text2);font-size:0.9rem;line-height:1.7;}
+.other-tools{margin-top:2.5rem;}
+.other-tools h3{font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--text2);}
+.other-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;}
+.other-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem;text-decoration:none;color:inherit;transition:.3s;display:block;}
+.other-card:hover{border-color:var(--border2);transform:translateY(-2px);background:var(--surface2);}
+.other-card-icon{font-size:1.5rem;margin-bottom:0.5rem;}
+.other-card-name{font-family:var(--font-display);font-size:0.9rem;font-weight:700;margin-bottom:0.2rem;}
+.other-card-desc{font-size:0.78rem;color:var(--text3);}
+.page-footer{border-top:1px solid var(--border);padding:1.5rem 2rem;text-align:center;font-size:0.8rem;color:var(--text3);}
+.page-footer a{color:var(--accent);text-decoration:none;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">NEXUS<span>.</span></a>
+  <a href="index.html" class="back-btn">← Back to All Tools</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="hero-section">
+    <div class="tool-icon-big">💧</div>
+    <div>
+      <span class="tool-badge-chip" style="background:rgba(91,141,238,0.12);border:1px solid rgba(91,141,238,0.25);color:#5b8dee;">❤️ Health</span>
+      <span class="tool-badge-chip" style="background:rgba(47,215,113,0.12);border:1px solid rgba(47,215,113,0.25);color:#2fd771;">✨ NEW</span>
+    </div>
+    <h1 class="tool-title">Water Intake Calculator</h1>
+    <p class="tool-desc">Find your optimal daily water intake based on body weight, activity level, and climate. Stay hydrated, stay healthy.</p>
+    <div class="meta-chips">
+      <span class="meta-chip">👁 360K uses</span>
+      <span class="meta-chip">·</span>
+      <span class="meta-chip">🌡️ Climate-adjusted</span>
+      <span class="meta-chip">·</span>
+      <span class="meta-chip">🔒 No data stored</span>
+    </div>
+  </div>
+
+  <div style="padding:1.25rem 2rem;max-width:760px;margin:0 auto;width:100%;">
+    <div class="health-tabs">
+      <a href="bmi-calculator.html" class="htab">⚖️ BMI Calculator</a>
+      <a href="calorie-calculator.html" class="htab">🍎 Calorie Calculator</a>
+      <a href="water-intake-calculator.html" class="htab active">💧 Water Intake</a>
+      <a href="age-calculator.html" class="htab">🎂 Age Calculator</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="tool-card-wrap">
+      <div class="card-header">
+        <div class="card-header-icon">💧</div>
+        <div>
+          <div class="card-header-title">Water Intake Calculator</div>
+          <div class="card-header-sub">Daily Hydration · Science-Based Formula</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Body Weight (kg)</label>
+            <input class="form-input" id="wat-weight" type="number" value="70" min="20">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Age Group</label>
+            <select class="form-input" id="wat-age" style="cursor:pointer">
+              <option value="adult">Adult (18–55)</option>
+              <option value="senior">Senior (55+)</option>
+              <option value="teen">Teen (13–17)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Activity Level</label>
+          <select class="form-input" id="wat-activity" style="cursor:pointer">
+            <option value="0">🪑 Low (sedentary, desk job)</option>
+            <option value="0.35" selected>🚶 Moderate (some exercise)</option>
+            <option value="0.6">🏃 High (regular intense exercise)</option>
+            <option value="0.9">🏋️ Athlete (daily training)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Climate / Environment</label>
+          <select class="form-input" id="wat-climate" style="cursor:pointer">
+            <option value="0">❄️ Cool / AC environment</option>
+            <option value="0.2" selected>🌤️ Moderate (typical indoor/outdoor)</option>
+            <option value="0.5">☀️ Hot & humid (tropical)</option>
+            <option value="0.8">🔥 Extreme heat (outdoor labor)</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="calcWater()">💧 Calculate Water Intake</button>
+
+        <div class="result-box" id="wat-result">
+          <div class="result-label">Daily Water Intake</div>
+          <div class="result-val" id="wat-val">—</div>
+          <div class="result-sub" id="wat-sub"></div>
+          <div class="result-grid" id="wat-grid"></div>
+        </div>
+
+        <div class="water-tracker" id="water-tracker">
+          <div class="tracker-title">Today's Hydration Tracker</div>
+          <div class="glass-grid" id="glass-grid"></div>
+          <div class="tracker-progress">
+            <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text3);">
+              <span id="tracker-count">0 glasses drank</span>
+              <span id="tracker-target"></span>
+            </div>
+            <div class="tracker-bar-wrap"><div class="tracker-bar" id="tracker-bar" style="width:0%"></div></div>
+            <div class="tracker-status" id="tracker-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="info-card">
+        <h3>💧 How Water Needs Are Calculated</h3>
+        <p>The base formula uses 33ml per kg of body weight, then adjusts for activity and climate. For example, a 70 kg adult with moderate activity needs approximately 2.3–2.8 litres per day.</p>
+        <div class="highlight-box">
+          <strong>Base:</strong> 33 ml × body weight (kg)<br>
+          <strong>Activity add-on:</strong> +350–900 ml based on exercise intensity<br>
+          <strong>Climate add-on:</strong> +200–800 ml based on heat and humidity
+        </div>
+      </div>
+      <div class="info-card">
+        <h3>🌿 Signs of Dehydration</h3>
+        <p>Early signs include dark urine (aim for pale straw colour), thirst, fatigue, and difficulty concentrating. Even mild dehydration of 1–2% body weight can reduce cognitive performance by up to 10% and physical performance by 20%.</p>
+      </div>
+      <div class="info-card">
+        <h3>☕ Does Tea & Coffee Count?</h3>
+        <p>Yes — moderate tea and coffee do contribute to hydration. Despite being mild diuretics, the net fluid gain is positive. However, plain water remains the ideal source. Fruits and vegetables also contribute significantly — a diet rich in them can provide 20–30% of your daily fluid needs.</p>
+      </div>
+    </div>
+
+    <div class="other-tools">
+      <h3>More Health Tools</h3>
+      <div class="other-grid">
+        <a href="bmi-calculator.html" class="other-card">
+          <div class="other-card-icon">⚖️</div>
+          <div class="other-card-name">BMI Calculator</div>
+          <div class="other-card-desc">Body Mass Index with WHO classification</div>
+        </a>
+        <a href="calorie-calculator.html" class="other-card">
+          <div class="other-card-icon">🍎</div>
+          <div class="other-card-name">Calorie Calculator</div>
+          <div class="other-card-desc">Daily calorie needs based on lifestyle</div>
+        </a>
+        <a href="age-calculator.html" class="other-card">
+          <div class="other-card-icon">🎂</div>
+          <div class="other-card-name">Age Calculator</div>
+          <div class="other-card-desc">Exact age in years, months, and days</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    © 2025 <a href="index.html">NEXUS Tools</a> · Free Health Tools · No account required · Made with ❤️ in India 🇮🇳
+  </div>
+</div>
+
+<script>
+let totalGlasses = 0;
+let drank = 0;
+
+function calcWater() {
+  const w = parseFloat(document.getElementById('wat-weight').value) || 0;
+  const act = parseFloat(document.getElementById('wat-activity').value);
+  const climate = parseFloat(document.getElementById('wat-climate').value);
+  if (!w) return;
+
+  const liters = parseFloat((w * 0.033 + act + climate).toFixed(1));
+  const ml = Math.round(liters * 1000);
+  const glasses = Math.round(liters * 4);
+  const bottles = (liters / 1).toFixed(1);
+
+  totalGlasses = glasses;
+  drank = 0;
+
+  document.getElementById('wat-val').textContent = liters + ' litres';
+  document.getElementById('wat-sub').textContent = `≈ ${glasses} glasses · ${ml} ml · ${bottles}L bottles`;
+  document.getElementById('wat-grid').innerHTML = `
+    <div class="result-item"><div class="ri-label">In millilitres</div><div class="ri-val">${ml} ml</div></div>
+    <div class="result-item"><div class="ri-label">Glasses (250ml)</div><div class="ri-val">${glasses} glasses</div></div>
+    <div class="result-item"><div class="ri-label">1L bottles</div><div class="ri-val">${bottles} bottles</div></div>
+    <div class="result-item"><div class="ri-label">Per hour (16hr day)</div><div class="ri-val">${Math.round(ml/16)} ml/hr</div></div>`;
+
+  document.getElementById('wat-result').classList.add('show');
+  buildTracker(glasses);
+}
+
+function buildTracker(n) {
+  const grid = document.getElementById('glass-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'glass-btn';
+    btn.textContent = '🥛';
+    btn.title = `Glass ${i+1}`;
+    btn.onclick = () => toggleGlass(i, btn);
+    grid.appendChild(btn);
+  }
+  document.getElementById('tracker-target').textContent = `Goal: ${n} glasses`;
+  document.getElementById('water-tracker').classList.add('show');
+  updateTrackerUI();
+}
+
+function toggleGlass(i, btn) {
+  if (btn.classList.contains('filled')) {
+    btn.classList.remove('filled');
+    drank = Math.max(0, drank - 1);
+  } else {
+    btn.classList.add('filled');
+    drank++;
+  }
+  updateTrackerUI();
+}
+
+function updateTrackerUI() {
+  const pct = totalGlasses > 0 ? Math.round(drank / totalGlasses * 100) : 0;
+  document.getElementById('tracker-bar').style.width = pct + '%';
+  document.getElementById('tracker-count').textContent = `${drank} of ${totalGlasses} glasses`;
+  const status = pct >= 100 ? '🎉 Goal reached! Great job staying hydrated.'
+               : pct >= 50  ? `💧 Halfway there! ${totalGlasses - drank} more glasses to go.`
+               :              `💤 Just started — keep drinking!`;
+  document.getElementById('tracker-status').textContent = status;
+}
+</script>
+</body>
+</html>

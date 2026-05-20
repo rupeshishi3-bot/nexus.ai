@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Pomodoro Timer — NEXUS Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#040508;--bg2:#080b12;--bg3:#0c1020;--surface:rgba(255,255,255,.035);--surface2:rgba(255,255,255,.06);--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);--text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;--accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;--red:#f0635a;--green:#2fd771;--amber:#f5a623;--glow:rgba(91,141,238,.25);--r:12px;--r2:18px;--fd:'Syne',sans-serif;--fm:'Space Mono',monospace;--fb:'DM Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);overflow-x:hidden;cursor:none;transition:background .4s,color .4s;line-height:1.6}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+#cur{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s;mix-blend-mode:screen}
+#ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(91,141,238,.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s}
+#bgc{position:fixed;inset:0;z-index:0;opacity:.5}
+.w{position:relative;z-index:1;min-height:100vh}
+nav{position:fixed;inset:0 0 auto;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,.7);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);transition:background .3s}
+.logo{font-family:var(--fd);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;cursor:none}
+.logo span{-webkit-text-fill-color:var(--accent3)}
+.nr{display:flex;align-items:center;gap:.75rem}
+.back{padding:.4rem .9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:.875rem;text-decoration:none;cursor:none;transition:.2s}.back:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
+.thm{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:none;font-size:1rem;transition:.2s}.thm:hover{border-color:var(--accent)}
+main{max-width:680px;margin:0 auto;padding:96px 2rem 5rem}
+@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hdr{margin-bottom:2.5rem;animation:fu .7s ease both}
+.bc{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--text3);margin-bottom:1.25rem;flex-wrap:wrap}
+.bc a{color:var(--text3);text-decoration:none;cursor:none}.bc a:hover{color:var(--accent)}.bc s{opacity:.4}
+.hero{display:flex;align-items:center;gap:1.25rem}
+.ic{width:64px;height:64px;border-radius:18px;background:rgba(240,99,90,.12);border:1px solid rgba(240,99,90,.25);display:flex;align-items:center;justify-content:center;font-size:1.75rem;flex-shrink:0}
+.ttl{font-family:var(--fd);font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:.35rem}
+.sub{color:var(--text2);font-size:.9375rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:2rem;animation:fu .7s ease .1s both;text-align:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:10px;font-size:.9375rem;font-weight:500;font-family:var(--fb);cursor:none;transition:all .2s;border:none;outline:none}
+.bp{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,141,238,.3)}
+.bp:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(91,141,238,.4)}
+.bs{background:var(--surface2);border:1px solid var(--border2);color:var(--text)}.bs:hover{border-color:var(--accent);color:var(--accent)}
+/* Mode tabs */
+.mode-tabs{display:flex;gap:.5rem;justify-content:center;margin-bottom:1.75rem;flex-wrap:wrap}
+.mtab{padding:.45rem 1.1rem;border-radius:100px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:.8125rem;cursor:none;transition:.2s}
+.mtab.active{background:rgba(240,99,90,.15);border-color:rgba(240,99,90,.4);color:var(--red)}
+.mtab.break-active{background:rgba(47,215,113,.12);border-color:rgba(47,215,113,.3);color:var(--green)}
+/* Circle timer */
+.timer-circle-wrap{position:relative;width:240px;height:240px;margin:0 auto 2rem}
+.timer-svg{width:240px;height:240px;transform:rotate(-90deg)}
+.timer-track{fill:none;stroke:var(--bg3);stroke-width:8}
+.timer-prog{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .5s linear,stroke .4s}
+.timer-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.timer-mode{font-size:.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.25rem}
+.timer-time{font-family:var(--fm);font-size:3rem;font-weight:700;color:var(--accent);letter-spacing:.04em;line-height:1}
+.timer-session{font-size:.72rem;color:var(--text3);margin-top:.35rem}
+/* Controls */
+.controls{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem}
+/* Stats */
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+.stat-card{background:var(--bg3);border-radius:10px;padding:.9rem;text-align:center}
+.stat-n{font-family:var(--fm);font-size:1.5rem;font-weight:700;color:var(--accent)}
+.stat-l{font-size:.72rem;color:var(--text3);margin-top:.2rem}
+/* Custom timer */
+.custom-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem;text-align:left}
+.fg{margin-bottom:0}
+.fl{display:block;font-size:.8125rem;font-weight:500;color:var(--text2);margin-bottom:.4rem}
+.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.6rem .9rem;color:var(--text);font-size:.9375rem;font-family:var(--fb);outline:none;transition:border-color .2s;cursor:none}
+.fi:focus{border-color:var(--accent)}
+/* Info */
+.ig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:2rem;animation:fu .7s ease .2s both}
+@media(max-width:560px){.ig{grid-template-columns:1fr}}
+.icard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem;text-align:left}
+.iico{font-size:1.5rem;margin-bottom:.6rem}
+.ittl{font-family:var(--fd);font-size:.875rem;font-weight:700;margin-bottom:.3rem}
+.idesc{font-size:.8rem;color:var(--text3);line-height:1.5}
+#toast{position:fixed;bottom:2rem;right:2rem;z-index:500;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:.875rem 1.25rem;display:flex;align-items:center;gap:.75rem;font-size:.875rem;color:var(--text);box-shadow:0 20px 40px rgba(0,0,0,.4);transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+.lm{--bg:#faf8f4;--bg2:#fff;--bg3:#f2efe9;--surface:rgba(15,10,5,.045);--surface2:rgba(15,10,5,.08);--border:rgba(15,10,5,.09);--border2:rgba(15,10,5,.16);--text:#130f0a;--text2:#5a5048;--text3:#a8998a;--accent:#2c5fe3;--accent2:#6c3fd4;--accent3:#00a98a;--red:#c0392b;--green:#1a9e55}
+.lm nav{background:rgba(250,248,244,.82)}.lm .card,.lm .icard{background:#fff;border-color:rgba(15,10,5,.09)}
+.lm .stat-card,.lm .fi{background:#f7f5f0;border-color:rgba(15,10,5,.1)}.lm #toast{background:#fff}
+.lm .mtab{background:#f7f5f0;border-color:rgba(15,10,5,.1)}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="ring"></div><canvas id="bgc"></canvas>
+<div id="toast"><span id="ti">✓</span> <span id="tm"></span></div>
+<nav id="nav">
+  <a class="logo" href="index.html">NEXUS<span>.</span></a>
+  <div class="nr"><a class="back" href="index.html">← Back to All Tools</a><div class="thm" onclick="toggleTheme()">🌙</div></div>
+</nav>
+<div class="w"><main>
+  <div class="hdr">
+    <div class="bc"><a href="index.html">Home</a><s>›</s><a href="index.html">Productivity</a><s>›</s><span style="color:var(--text2)">Pomodoro Timer</span></div>
+    <div class="hero"><div class="ic">🍅</div><div>
+      <div class="ttl">Pomodoro Timer</div>
+      <div class="sub">Stay focused with the proven 25/5 Pomodoro technique</div>
+    </div></div>
+  </div>
+
+  <div class="card">
+    <div class="mode-tabs">
+      <button class="mtab active" id="tab-focus" onclick="setMode('focus',this)">🎯 Focus (25 min)</button>
+      <button class="mtab" id="tab-short" onclick="setMode('short',this)">☕ Short Break (5 min)</button>
+      <button class="mtab" id="tab-long" onclick="setMode('long',this)">🌿 Long Break (15 min)</button>
+    </div>
+
+    <div class="timer-circle-wrap">
+      <svg class="timer-svg" viewBox="0 0 240 240">
+        <circle class="timer-track" cx="120" cy="120" r="108"/>
+        <circle class="timer-prog" id="prog-circle" cx="120" cy="120" r="108" stroke="url(#grad)" stroke-dasharray="678.6" stroke-dashoffset="0"/>
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#5b8dee"/>
+            <stop offset="100%" stop-color="#0fe8c8"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="timer-center">
+        <div class="timer-mode" id="mode-label">FOCUS</div>
+        <div class="timer-time" id="timer-display">25:00</div>
+        <div class="timer-session" id="session-label">Session 1</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn bp" id="start-btn" onclick="toggleTimer()">▶ Start</button>
+      <button class="btn bs" onclick="resetTimer()">↺ Reset</button>
+      <button class="btn bs" onclick="skipPhase()">⏭ Skip</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-n" id="stat-sessions">0</div><div class="stat-l">Sessions Done</div></div>
+      <div class="stat-card"><div class="stat-n" id="stat-focus">0m</div><div class="stat-l">Focus Time</div></div>
+      <div class="stat-card"><div class="stat-n" id="stat-breaks">0</div><div class="stat-l">Breaks Taken</div></div>
+    </div>
+  </div>
+
+  <div class="ig">
+    <div class="icard"><div class="iico">🍅</div><div class="ittl">The Technique</div><div class="idesc">Work for 25 minutes, then take a 5-minute break. After 4 sessions, take a longer 15-minute break.</div></div>
+    <div class="icard"><div class="iico">🧠</div><div class="ittl">Why It Works</div><div class="idesc">Short work intervals with regular breaks reduces mental fatigue and keeps your focus sharp all day.</div></div>
+    <div class="icard"><div class="iico">🔔</div><div class="ittl">Enable Sound</div><div class="idesc">Allow browser notifications for sound alerts when each session ends — keep the tab open in background.</div></div>
+  </div>
+</main></div>
+
+<script>
+let lm=localStorage.getItem('nx-theme')==='light';
+if(lm){document.body.classList.add('lm');document.querySelector('.thm').textContent='☀️';}
+function toggleTheme(){lm=!lm;document.body.classList.toggle('lm',lm);document.querySelector('.thm').textContent=lm?'☀️':'🌙';localStorage.setItem('nx-theme',lm?'light':'dark');}
+const cur=document.getElementById('cur'),ring=document.getElementById('ring');
+let cx=0,cy=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;cur.style.left=cx+'px';cur.style.top=cy+'px';});
+(function a(){rx+=(cx-rx)*.12;ry+=(cy-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(a);})();
+document.addEventListener('mousedown',()=>{cur.style.width='6px';cur.style.height='6px'});
+document.addEventListener('mouseup',()=>{cur.style.width='10px';cur.style.height='10px'});
+document.querySelectorAll('button,a').forEach(el=>{el.addEventListener('mouseenter',()=>{ring.style.width='54px';ring.style.height='54px';ring.style.borderColor='rgba(91,141,238,.8)'});el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(91,141,238,.5)'});});
+(function(){const c=document.getElementById('bgc'),x=c.getContext('2d');let W,H,p=[];function r(){W=c.width=innerWidth;H=c.height=innerHeight}r();addEventListener('resize',r);for(let i=0;i<80;i++)p.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.4+.1});function d(){x.clearRect(0,0,W,H);const lm=document.body.classList.contains('lm');p.forEach(pt=>{pt.x+=pt.vx;pt.y+=pt.vy;if(pt.x<0)pt.x=W;if(pt.x>W)pt.x=0;if(pt.y<0)pt.y=H;if(pt.y>H)pt.y=0;x.beginPath();x.arc(pt.x,pt.y,pt.r,0,Math.PI*2);x.fillStyle=`rgba(${lm?'44,95,227':'91,141,238'},${pt.o})`;x.fill();});x.strokeStyle=lm?'rgba(15,10,5,0.03)':'rgba(255,255,255,0.02)';x.lineWidth=1;for(let i=0;i<W;i+=80){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke();}for(let i=0;i<H;i+=80){x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke();}requestAnimationFrame(d);}d();})();
+let _tt;function toast(m,ic='✓'){const t=document.getElementById('toast');document.getElementById('tm').textContent=m;document.getElementById('ti').textContent=ic;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2500);}
+window.addEventListener('scroll',()=>{document.getElementById('nav').style.background=scrollY>50?'rgba(4,5,8,.95)':'rgba(4,5,8,.7)';});
+
+const MODES={focus:{secs:25*60,label:'FOCUS',color:'url(#grad)'},short:{secs:5*60,label:'SHORT BREAK',color:'#2fd771'},long:{secs:15*60,label:'LONG BREAK',color:'#0fe8c8'}};
+const CIRCUM=2*Math.PI*108;
+let _mode='focus',_secs=25*60,_total=25*60,_running=false,_timer=null;
+let _sessions=0,_breaks=0,_focusMins=0;
+
+function setMode(m,btn){
+  clearInterval(_timer);_running=false;
+  _mode=m;_secs=MODES[m].secs;_total=MODES[m].secs;
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active','break-active'));
+  btn.classList.add(m==='focus'?'active':'break-active');
+  document.getElementById('mode-label').textContent=MODES[m].label;
+  document.getElementById('prog-circle').setAttribute('stroke',MODES[m].color);
+  document.getElementById('start-btn').textContent='▶ Start';
+  updateDisplay();
+}
+
+function updateDisplay(){
+  const m=Math.floor(_secs/60),s=_secs%60;
+  document.getElementById('timer-display').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const offset=CIRCUM*(1-_secs/_total);
+  document.getElementById('prog-circle').style.strokeDashoffset=offset;
+  document.title=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} — Pomodoro | NEXUS`;
+}
+
+function toggleTimer(){
+  _running=!_running;
+  document.getElementById('start-btn').textContent=_running?'⏸ Pause':'▶ Resume';
+  if(_running){
+    _timer=setInterval(()=>{
+      _secs--;
+      if(_mode==='focus')_focusMins=Math.floor((_total-_secs)/60);
+      updateDisplay();
+      if(_secs<=0){
+        clearInterval(_timer);_running=false;
+        document.getElementById('start-btn').textContent='▶ Start';
+        if(_mode==='focus'){_sessions++;document.getElementById('stat-sessions').textContent=_sessions;document.getElementById('stat-focus').textContent=Math.round(_total/60)*(parseInt(document.getElementById('stat-sessions').textContent))+'m';toast('🎉 Session complete! Take a break.','🍅');}
+        else{_breaks++;document.getElementById('stat-breaks').textContent=_breaks;toast('⚡ Break over! Back to focus.','🎯');}
+      }
+    },1000);
+  } else {clearInterval(_timer);}
+}
+
+function resetTimer(){
+  clearInterval(_timer);_running=false;_secs=_total;
+  document.getElementById('start-btn').textContent='▶ Start';
+  updateDisplay();
+}
+
+function skipPhase(){
+  clearInterval(_timer);_running=false;
+  if(_mode==='focus'){_sessions++;document.getElementById('stat-sessions').textContent=_sessions;setMode('short',document.getElementById('tab-short'));}
+  else{setMode('focus',document.getElementById('tab-focus'));}
+}
+
+document.getElementById('session-label').textContent='Session 1';
+updateDisplay();
+</script>
+</body></html>

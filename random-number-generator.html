@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Number Generator — NEXUS Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#040508;--bg2:#080b12;--bg3:#0c1020;
+  --surface:rgba(255,255,255,0.035);--surface2:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#e8eaf0;--text2:#8b90a8;--text3:#555b72;
+  --accent:#5b8dee;--accent2:#7c6dfa;--accent3:#0fe8c8;
+  --green:#2fd771;--amber:#f5a623;--red:#f0635a;
+  --font-display:'Syne',sans-serif;--font-mono:'Space Mono',monospace;--font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;overflow-x:hidden;cursor:none}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:width .15s,height .15s}
+#cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(91,141,238,0.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.45}
+.site-wrap{position:relative;z-index:1;min-height:100vh}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;background:rgba(4,5,8,0.8);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;letter-spacing:-0.02em}
+.nav-logo span{-webkit-text-fill-color:var(--accent3)}
+.nav-center{font-family:var(--font-display);font-size:0.875rem;font-weight:700;color:var(--text3)}
+.nav-back{display:flex;align-items:center;gap:0.4rem;padding:0.4rem 0.9rem;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.85rem;text-decoration:none;cursor:none;transition:.2s}
+.nav-back:hover{border-color:var(--accent);color:var(--accent)}
+.page-hero{padding:110px 2rem 32px;text-align:center}
+.tool-chip{display:inline-flex;align-items:center;gap:0.5rem;padding:0.3rem 0.9rem;border-radius:100px;background:rgba(124,109,250,0.1);border:1px solid rgba(124,109,250,0.25);color:var(--accent2);font-size:0.8rem;font-weight:500;margin-bottom:1.1rem}
+.page-title{font-family:var(--font-display);font-size:clamp(2rem,5vw,3rem);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin-bottom:0.5rem}
+.page-title span{background:linear-gradient(135deg,var(--accent2),var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.page-sub{color:var(--text2);font-size:0.95rem;font-weight:300;max-width:440px;margin:0 auto}
+.main{max-width:720px;margin:0 auto;padding:0 2rem 5rem}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:24px;overflow:hidden;box-shadow:0 32px 64px rgba(0,0,0,0.4);margin-bottom:1.25rem}
+.card-header{padding:1.25rem 1.75rem;background:linear-gradient(135deg,rgba(124,109,250,0.07),transparent);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.75rem}
+.c-icon{width:44px;height:44px;border-radius:12px;background:rgba(124,109,250,0.12);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.c-title{font-family:var(--font-display);font-size:1rem;font-weight:700}
+.c-sub{font-size:0.8rem;color:var(--text2);margin-top:0.1rem}
+.card-body{padding:1.75rem}
+
+/* FORM */
+.form-group{margin-bottom:1.1rem}
+.form-label{display:block;font-size:0.78rem;font-weight:500;color:var(--text2);margin-bottom:0.35rem;letter-spacing:0.01em}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:0.7rem 1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;transition:border-color .2s,box-shadow .2s;cursor:none}
+.form-input:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(124,109,250,0.12)}
+.form-input::placeholder{color:var(--text3)}
+.form-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:0.7rem 1rem;color:var(--text);font-size:0.9375rem;font-family:var(--font-body);outline:none;cursor:none;appearance:none}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:480px){.form-row{grid-template-columns:1fr}}
+
+/* TABS */
+.tabs{display:flex;gap:0.375rem;margin-bottom:1.5rem;background:var(--bg3);border-radius:10px;padding:4px}
+.tab-btn{flex:1;padding:0.45rem 0.5rem;border-radius:7px;border:none;background:none;color:var(--text3);font-size:0.8rem;font-weight:600;font-family:var(--font-body);cursor:none;transition:.2s}
+.tab-btn.active{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+
+/* BIG NUMBER */
+.result-display{text-align:center;background:rgba(124,109,250,0.06);border:1px solid rgba(124,109,250,0.18);border-radius:16px;padding:2rem 1.5rem;margin-bottom:1.25rem;position:relative;overflow:hidden;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.result-display::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(124,109,250,0.1),transparent 70%);pointer-events:none}
+.result-label{font-size:0.72rem;color:var(--accent2);font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem}
+.result-number{font-family:var(--font-mono);font-size:clamp(1.8rem,6vw,3rem);font-weight:700;background:linear-gradient(135deg,var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;word-break:break-all;text-align:center;transition:all .2s}
+.result-number.pop{animation:pop .25s ease}
+.result-sub{font-size:0.8rem;color:var(--text3);margin-top:0.4rem}
+@keyframes pop{0%{transform:scale(1.18)}100%{transform:scale(1)}}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.8rem 1.25rem;border-radius:10px;font-size:0.9375rem;font-weight:600;font-family:var(--font-body);cursor:none;transition:all .2s;border:none;outline:none}
+.btn-primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;box-shadow:0 4px 20px rgba(124,109,250,0.3);width:100%}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,109,250,0.45)}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border2);color:var(--text);flex:1}
+.btn-secondary:hover{border-color:var(--accent2);color:var(--accent2)}
+.btn-row{display:flex;gap:0.75rem;margin-top:0.75rem}
+
+/* SETS OUTPUT */
+.sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:0.5rem;margin-top:1rem}
+.set-num{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0.5rem;text-align:center;font-family:var(--font-mono);font-size:0.9rem;font-weight:700;color:var(--text);cursor:none;transition:.2s;animation:pop .2s ease both}
+.set-num:hover{border-color:var(--accent2);color:var(--accent2)}
+
+/* HISTORY */
+.history-wrap{margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem}
+.history-label{font-size:0.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.6rem;display:flex;justify-content:space-between}
+.history-list{display:flex;flex-wrap:wrap;gap:0.4rem}
+.hist-tag{font-family:var(--font-mono);font-size:0.78rem;padding:0.2rem 0.55rem;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--text2);cursor:none;transition:.15s}
+.hist-tag:hover{border-color:var(--accent2);color:var(--accent2)}
+
+/* DICE */
+.dice-wrap{display:flex;justify-content:center;gap:1rem;margin:1.25rem 0}
+.die{width:64px;height:64px;background:var(--bg3);border:2px solid var(--border2);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-family:var(--font-mono);font-weight:700;color:var(--text);transition:all .3s;cursor:none}
+.die.rolling{animation:dieRoll .4s ease}
+@keyframes dieRoll{0%{transform:rotate(0) scale(1)}25%{transform:rotate(15deg) scale(0.9)}75%{transform:rotate(-10deg) scale(1.05)}100%{transform:rotate(0) scale(1)}}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .7s ease both}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="bg-canvas"></canvas>
+
+<div class="site-wrap">
+<nav>
+  <a href="index.html" class="nav-logo">NEXUS<span>.</span></a>
+  <span class="nav-center">Productivity Tools</span>
+  <a href="index.html" class="nav-back">← All Tools</a>
+</nav>
+
+<div class="page-hero fade-up">
+  <div class="tool-chip">🎲 Productivity</div>
+  <h1 class="page-title"><span>Random Number Generator</span></h1>
+  <p class="page-sub">Generate truly random numbers — single values, sets, dice rolls, and more.</p>
+</div>
+
+<div class="main fade-up" style="animation-delay:.1s">
+
+  <!-- SINGLE NUMBER CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="c-icon">🎲</div>
+      <div>
+        <div class="c-title">Single Random Number</div>
+        <div class="c-sub">Generate one number within your range</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="result-display" id="single-display">
+        <div class="result-label">Your Random Number</div>
+        <div class="result-number" id="single-result">—</div>
+        <div class="result-sub" id="single-sub">Set a range and generate</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Min Value</label>
+          <input class="form-input" id="rng-min" type="number" value="1" placeholder="e.g. 1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Value</label>
+          <input class="form-input" id="rng-max" type="number" value="100" placeholder="e.g. 100">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Include Decimal Places</label>
+        <select class="form-select" id="rng-decimal">
+          <option value="0">Integer only</option>
+          <option value="1">1 decimal place</option>
+          <option value="2">2 decimal places</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="btn-generate" onclick="generateSingle()">🎲 Generate Number</button>
+      <div class="history-wrap" id="history-wrap" style="display:none">
+        <div class="history-label">
+          <span>Recent History</span>
+          <span style="cursor:pointer;color:var(--red)" onclick="clearHistory()">Clear</span>
+        </div>
+        <div class="history-list" id="history-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SET GENERATOR CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="c-icon">🔢</div>
+      <div>
+        <div class="c-title">Generate a Set</div>
+        <div class="c-sub">Multiple unique or repeated numbers at once</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Min</label>
+          <input class="form-input" id="set-min" type="number" value="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max</label>
+          <input class="form-input" id="set-max" type="number" value="50">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">How Many Numbers</label>
+          <input class="form-input" id="set-count" type="number" value="6" min="1" max="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Allow Duplicates</label>
+          <select class="form-select" id="set-unique">
+            <option value="unique">No — Unique only</option>
+            <option value="repeat">Yes — Allow repeats</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="generateSet()">🎰 Generate Set</button>
+      <div class="sets-grid" id="sets-grid"></div>
+    </div>
+  </div>
+
+  <!-- DICE ROLLER CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="c-icon">🎯</div>
+      <div>
+        <div class="c-title">Dice Roller</div>
+        <div class="c-sub">Roll standard RPG dice instantly</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="dice-wrap" id="dice-wrap">
+        <div class="die" id="d1">?</div>
+        <div class="die" id="d2">?</div>
+      </div>
+      <div class="form-row" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="form-label">Dice Type</label>
+          <select class="form-select" id="dice-type">
+            <option value="6">D6 — Standard</option>
+            <option value="4">D4</option>
+            <option value="8">D8</option>
+            <option value="10">D10</option>
+            <option value="12">D12</option>
+            <option value="20">D20 — Critical</option>
+            <option value="100">D100 — Percentile</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Number of Dice</label>
+          <select class="form-select" id="dice-count">
+            <option value="1">1 Die</option>
+            <option value="2" selected>2 Dice</option>
+            <option value="3">3 Dice</option>
+            <option value="4">4 Dice</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="rollDice()">🎯 Roll Dice</button>
+      </div>
+      <div id="dice-total" style="text-align:center;margin-top:1rem;font-family:var(--font-mono);font-size:0.9rem;color:var(--text3)"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ── CURSOR ──
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let cx=0,cy=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;cur.style.left=cx+'px';cur.style.top=cy+'px'});
+(function loop(){rx+=(cx-rx)*.12;ry+=(cy-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop)})();
+document.addEventListener('mousedown',()=>{cur.style.width='6px';cur.style.height='6px'});
+document.addEventListener('mouseup',()=>{cur.style.width='10px';cur.style.height='10px'});
+document.querySelectorAll('button,a,select').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ring.style.width='52px';ring.style.height='52px';ring.style.borderColor='rgba(124,109,250,0.8)'});
+  el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(91,141,238,0.5)'});
+});
+
+// ── CANVAS ──
+(function(){
+  const c=document.getElementById('bg-canvas'),ctx=c.getContext('2d');
+  let W,H,P=[];
+  const resize=()=>{W=c.width=window.innerWidth;H=c.height=window.innerHeight};
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<70;i++)P.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.35+.08});
+  (function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.018)';ctx.lineWidth=1;
+    for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    P.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(124,109,250,${p.o})`;ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  })();
+})();
+
+// ── LOGIC ──
+let history=[];
+
+function rnd(min,max){return Math.random()*(max-min)+min;}
+
+function generateSingle(){
+  const min=parseFloat(document.getElementById('rng-min').value)||0;
+  const max=parseFloat(document.getElementById('rng-max').value)||100;
+  const dec=parseInt(document.getElementById('rng-decimal').value);
+  if(min>max){document.getElementById('single-sub').textContent='Min must be ≤ Max';return;}
+  const val=parseFloat(rnd(min,max).toFixed(dec));
+  const el=document.getElementById('single-result');
+  el.textContent=val;
+  el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');
+  document.getElementById('single-sub').textContent=`Range: ${min} — ${max}`;
+  history.unshift(val);
+  if(history.length>20)history.pop();
+  document.getElementById('history-wrap').style.display='block';
+  document.getElementById('history-list').innerHTML=history.map(n=>`<span class="hist-tag">${n}</span>`).join('');
+}
+function clearHistory(){history=[];document.getElementById('history-list').innerHTML='';document.getElementById('history-wrap').style.display='none';}
+
+function generateSet(){
+  const min=parseInt(document.getElementById('set-min').value)||1;
+  const max=parseInt(document.getElementById('set-max').value)||50;
+  let count=parseInt(document.getElementById('set-count').value)||6;
+  const unique=document.getElementById('set-unique').value==='unique';
+  if(min>max){document.getElementById('sets-grid').innerHTML='<span style="color:var(--red);font-size:0.85rem">Min must be ≤ Max</span>';return;}
+  const range=max-min+1;
+  if(unique&&count>range)count=range;
+  count=Math.min(count,100);
+  const nums=[];
+  if(unique){
+    const pool=Array.from({length:range},(_,i)=>min+i);
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+    nums.push(...pool.slice(0,count));
+  } else {
+    for(let i=0;i<count;i++)nums.push(Math.floor(rnd(min,max+1)));
+  }
+  nums.sort((a,b)=>a-b);
+  document.getElementById('sets-grid').innerHTML=nums.map((n,i)=>`<div class="set-num" style="animation-delay:${i*0.03}s">${n}</div>`).join('');
+}
+
+const DICE_FACES=['','⚀','⚁','⚂','⚃','⚄','⚅'];
+function rollDice(){
+  const sides=parseInt(document.getElementById('dice-type').value);
+  const count=parseInt(document.getElementById('dice-count').value);
+  const wrap=document.getElementById('dice-wrap');
+  // Build dice elements
+  wrap.innerHTML='';
+  const results=[];
+  for(let i=0;i<count;i++){
+    const val=Math.floor(Math.random()*sides)+1;
+    results.push(val);
+    const die=document.createElement('div');
+    die.className='die rolling';
+    die.textContent=sides===6?DICE_FACES[val]:val;
+    wrap.appendChild(die);
+  }
+  const total=results.reduce((a,b)=>a+b,0);
+  document.getElementById('dice-total').innerHTML=`Total: <strong style="color:var(--accent2);font-size:1.1em">${total}</strong>  ·  ${results.join(', ')}`;
+}
+
+// Enter key
+document.querySelectorAll('#rng-min,#rng-max,#rng-decimal').forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')generateSingle()}));
+</script>
+</body>
+</html>

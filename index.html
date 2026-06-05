@@ -1541,7 +1541,7 @@ footer{
     <span style="font-size:1.1rem">✦</span>
     <div>
       <div class="ai-panel-title">NEXUS AI Assistant</div>
-      <div style="font-size:0.72rem;color:var(--text3);margin-top:1px">Powered by Gemini · Ask anything</div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:1px" id="ai-status-label">Loading AI...</div>
     </div>
     <div class="ai-orb-dot"></div>
     <button class="ai-panel-close" onclick="toggleAI()">✕</button>
@@ -2515,11 +2515,41 @@ function toggleTheme(){
 })();
 
 // ═══════════════════════════════════════════
-// AI PANEL — Gemini-powered chat
+// AI PANEL — WebLLM local browser inference
 // ═══════════════════════════════════════════
 let aiHistory = [];
 let aiIsOpen = false;
 let aiIsTyping = false;
+let webllmEngine = null;
+let webllmReady = false;
+
+// Load WebLLM via ES module and initialise engine on page load
+(async function initWebLLM() {
+  try {
+    const { CreateMLCEngine } = await import(
+      "https://esm.run/@mlc-ai/web-llm"
+    );
+    const MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+    webllmEngine = await CreateMLCEngine(MODEL, {
+      initProgressCallback: (info) => {
+        const label = document.getElementById('ai-status-label');
+        if (label) {
+          const pct = info.progress != null ? Math.round(info.progress * 100) : null;
+          label.textContent = pct != null
+            ? `Loading AI… ${pct}%`
+            : (info.text ? info.text.substring(0, 40) : 'Loading AI…');
+        }
+      }
+    });
+    webllmReady = true;
+    const label = document.getElementById('ai-status-label');
+    if (label) label.textContent = 'AI Ready · Runs locally';
+  } catch(err) {
+    console.error('WebLLM init failed:', err);
+    const label = document.getElementById('ai-status-label');
+    if (label) label.textContent = 'AI failed to load.';
+  }
+})();
 
 function toggleAI(){
   aiIsOpen = !aiIsOpen;
@@ -2565,43 +2595,47 @@ function aiSendChip(text) {
   aiSend();
 }
 
-const callAPI = async (message) => {
-  const response = await fetch(
-    "https://nexus-chatbot.rupeshishi3.workers.dev/",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: message
-      })
-    }
-  );
-  return await response.json();
-};
-
 async function aiSend() {
   const input = document.getElementById('ai-input');
   const text = input.value.trim();
   if(!text || aiIsTyping) return;
+
+  if(!webllmReady || !webllmEngine) {
+    aiAddBotMsg("AI is still loading. Please wait a moment and try again.");
+    return;
+  }
+
   input.value = '';
   aiIsTyping = true;
   document.getElementById('ai-send').disabled = true;
 
   aiAddUserMsg(text);
-  aiHistory.push({role:'user', content: text});
+  aiHistory.push({ role: 'user', content: text });
 
   const indicator = aiAddBotMsg('', true);
 
-  try {
-    const data = await callAPI(text);
+  // Show thinking status
+  const label = document.getElementById('ai-status-label');
+  if (label) label.textContent = 'Thinking…';
 
-    const finalReply = data.reply || "Sorry, I couldn't generate a response.";
+  try {
+    const reply = await webllmEngine.chat.completions.create({
+      messages: [
+        {
+          role: 'system',
+          content: "You are NEXUS AI, a helpful assistant for NEXUS Tools — India's utility platform with 100+ free calculators including EMI, SIP, GST, BMI, income tax, QR code, password generator, word counter and more. Answer questions about finance, health, productivity concisely and helpfully. When relevant, mention specific NEXUS tool names like 'EMI Calculator', 'SIP Calculator', 'GST Calculator', 'BMI Calculator', etc."
+        },
+        ...aiHistory
+      ]
+    });
+
+    const finalReply = reply.choices[0].message.content || "Sorry, I couldn't generate a response.";
 
     indicator.remove();
     aiAddBotMsg(finalReply);
-    aiHistory.push({role:'assistant', content: finalReply});
+    aiHistory.push({ role: 'assistant', content: finalReply });
+
+    if (label) label.textContent = 'AI Ready · Runs locally';
 
     // Show clickable tool chip if a NEXUS tool is mentioned
     const mentioned = TOOLS.find(t => finalReply.includes(t.name));
@@ -2618,9 +2652,12 @@ async function aiSend() {
     }
 
   } catch(e) {
+    console.error('WebLLM generation error:', e);
     indicator.remove();
-    aiAddBotMsg("Connection error. Please try again.");
+    aiAddBotMsg("Please try again.");
+    if (label) label.textContent = 'AI Ready · Runs locally';
   }
+
   aiIsTyping = false;
   document.getElementById('ai-send').disabled = false;
 }
@@ -3874,12 +3911,15 @@ async function genAIPrompt(){
   };
 
   try {
-    const data = await callAPI(`${typeGuides[type]} ${detailGuide[detail]} Output only the final prompt text, nothing else — no intro, no labels, just the prompt itself.`);
-    const prompt = data.reply || 'Unable to generate prompt. Please try again.';
+    if(!webllmReady || !webllmEngine) throw new Error('AI not ready');
+    const reply = await webllmEngine.chat.completions.create({
+      messages: [{ role: 'user', content: `${typeGuides[type]} ${detailGuide[detail]} Output only the final prompt text, nothing else — no intro, no labels, just the prompt itself.` }]
+    });
+    const prompt = reply.choices[0].message.content || 'Unable to generate prompt. Please try again.';
     document.getElementById('ai-prompt-output').textContent = prompt;
     document.getElementById('ai-result').classList.add('show');
   } catch(e) {
-    document.getElementById('ai-prompt-output').textContent = 'Connection error. Please try again.';
+    document.getElementById('ai-prompt-output').textContent = webllmReady ? 'Please try again.' : 'AI is still loading. Please wait.';
     document.getElementById('ai-result').classList.add('show');
   }
 
@@ -3934,15 +3974,18 @@ async function genCaption(){
   document.getElementById('cap-loading').style.display='block';
   document.getElementById('cap-output').innerHTML='';
   try{
-    const data=await callAPI(`Generate 3 viral, engaging ${platform} captions for: "${topic}". Tone: ${tone}. Each caption should feel native to ${platform} with relevant emojis and hashtags where appropriate. Separate each caption with --- on its own line. Output only the captions, no labels or numbering.`);
-    const text=data.reply||'';
-    const captions=text.split(/\n---\n/).map(s=>s.trim()).filter(Boolean);
+    if(!webllmReady || !webllmEngine) throw new Error('AI not ready');
+    const reply=await webllmEngine.chat.completions.create({
+      messages:[{role:'user',content:`Generate 3 viral, engaging ${platform} captions for: "${topic}". Tone: ${tone}. Each caption should feel native to ${platform} with relevant emojis and hashtags where appropriate. Separate each caption with --- on its own line. Output only the captions, no labels or numbering.`}]
+    });
+    const text=reply.choices[0].message.content||'';
+    const captions=text.split(/\n?---\n?/).map(s=>s.trim()).filter(Boolean);
     document.getElementById('cap-output').innerHTML=captions.map(c=>{
       const safe=c.replace(/'/g,"\\'").replace(/\n/g,'\\n');
       return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:0.75rem;font-size:0.875rem;color:var(--text2);line-height:1.7;cursor:pointer;transition:.2s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="copy(decodeURIComponent('${encodeURIComponent(c)}'));showToast('Caption copied!','📋')">${c.replace(/\n/g,'<br>')}<div style="font-size:0.7rem;color:var(--accent);margin-top:0.5rem">Click to copy</div></div>`;
     }).join('');
   }catch(e){
-    document.getElementById('cap-output').innerHTML='<p style="color:var(--red)">Connection error. Please try again.</p>';
+    document.getElementById('cap-output').innerHTML=`<p style="color:var(--red)">${webllmReady?'Please try again.':'AI is still loading. Please wait.'}</p>`;
   }
   document.getElementById('cap-gen-btn').style.display='block';
   document.getElementById('cap-loading').style.display='none';
@@ -4014,11 +4057,14 @@ async function genBio(){
   document.getElementById('bio-loading').style.display='block';
   document.getElementById('bio-result').classList.remove('show');
   try{
-    const data=await callAPI(`Write a ${tone.toLowerCase()} professional bio for ${platform} for: Name: ${name}, Role: ${role}, Skills/Interests: ${skills}. Make it authentic, engaging, and optimized for ${platform}. Keep it under 150 words. Output only the bio text, nothing else.`);
-    document.getElementById('bio-output').textContent=data.reply||'Unable to generate. Please try again.';
+    if(!webllmReady || !webllmEngine) throw new Error('AI not ready');
+    const reply=await webllmEngine.chat.completions.create({
+      messages:[{role:'user',content:`Write a ${tone.toLowerCase()} professional bio for ${platform} for: Name: ${name}, Role: ${role}, Skills/Interests: ${skills}. Make it authentic, engaging, and optimized for ${platform}. Keep it under 150 words. Output only the bio text, nothing else.`}]
+    });
+    document.getElementById('bio-output').textContent=reply.choices[0].message.content||'Unable to generate. Please try again.';
     document.getElementById('bio-result').classList.add('show');
   }catch(e){
-    document.getElementById('bio-output').textContent='Connection error. Please try again.';
+    document.getElementById('bio-output').textContent=webllmReady?'Please try again.':'AI is still loading. Please wait.';
     document.getElementById('bio-result').classList.add('show');
   }
   document.getElementById('bio-gen-btn').style.display='block';

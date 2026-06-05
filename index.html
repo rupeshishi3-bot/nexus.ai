@@ -238,13 +238,12 @@ nav, .modal-box, .cmd-box, #ai-panel, .tool-card, .cat-card, .price-card,
 #cursor{
   position:fixed;width:10px;height:10px;border-radius:50%;
   background:var(--accent);pointer-events:none;z-index:9999;
-  transform:translate(-50%,-50%);transition:width .15s,height .15s,background .15s;
-  mix-blend-mode:screen;
+  transform:translate(-50%,-50%);transition:width .15s,height .15s,background .15s,opacity .3s;
 }
 #cursor-ring{
   position:fixed;width:36px;height:36px;border-radius:50%;
   border:1px solid rgba(91,141,238,0.5);pointer-events:none;z-index:9998;
-  transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s,transform .1s;
+  transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s,transform .1s,opacity .3s;
 }
 
 /* CANVAS BG */
@@ -1542,7 +1541,7 @@ footer{
     <span style="font-size:1.1rem">✦</span>
     <div>
       <div class="ai-panel-title">NEXUS AI Assistant</div>
-      <div style="font-size:0.72rem;color:var(--text3);margin-top:1px">Powered by Claude · Ask anything</div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:1px">Powered by Gemini · Ask anything</div>
     </div>
     <div class="ai-orb-dot"></div>
     <button class="ai-panel-close" onclick="toggleAI()">✕</button>
@@ -1682,7 +1681,7 @@ footer{
       <div class="fb-text">
         <div class="section-label">Featured · AI-Powered</div>
         <div class="fb-title">NEXUS AI <span class="grad-anim">Assistant</span></div>
-        <div class="fb-sub">Ask any financial, health, or productivity question and get instant, intelligent answers powered by Claude AI — plus the right tool recommended for you.</div>
+        <div class="fb-sub">Ask any financial, health, or productivity question and get instant, intelligent answers powered by Gemini AI — plus the right tool recommended for you.</div>
         <div class="fb-actions">
           <button class="btn btn-primary" onclick="toggleAI();setTimeout(()=>{document.getElementById('ai-input')&&document.getElementById('ai-input').focus()},350)">✦ Chat with AI</button>
           <button class="btn btn-secondary" onclick="openTool('ai-prompt')">✨ AI Prompt Generator</button>
@@ -2201,10 +2200,14 @@ let isLightMode = false;
 // ═══════════════════════════════════════════
 const cursor = document.getElementById('cursor');
 const cursorRing = document.getElementById('cursor-ring');
-let curX=0,curY=0,ringX=0,ringY=0;
+let curX=-100,curY=-100,ringX=-100,ringY=-100;
+cursor.style.opacity='0';
+cursorRing.style.opacity='0';
 document.addEventListener('mousemove',e=>{
   curX=e.clientX;curY=e.clientY;
   cursor.style.left=curX+'px';cursor.style.top=curY+'px';
+  cursor.style.opacity='1';
+  cursorRing.style.opacity='1';
 });
 function animRing(){
   ringX+=(curX-ringX)*0.12;
@@ -2512,7 +2515,7 @@ function toggleTheme(){
 })();
 
 // ═══════════════════════════════════════════
-// AI PANEL — Full Claude-powered chat
+// AI PANEL — Gemini-powered chat
 // ═══════════════════════════════════════════
 let aiHistory = [];
 let aiIsOpen = false;
@@ -2562,6 +2565,22 @@ function aiSendChip(text) {
   aiSend();
 }
 
+const callAPI = async (message) => {
+  const response = await fetch(
+    "https://nexus-chatbot.rupeshishi3.workers.dev/",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: message
+      })
+    }
+  );
+  return await response.json();
+};
+
 async function aiSend() {
   const input = document.getElementById('ai-input');
   const text = input.value.trim();
@@ -2576,80 +2595,9 @@ async function aiSend() {
   const indicator = aiAddBotMsg('', true);
 
   try {
-    const toolList = TOOLS.map(t => `${t.name} (id:${t.id}, cat:${t.cat})`).join(', ');
-    const today = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
-    const systemPrompt = `You are NEXUS AI, a brilliant and friendly assistant built into NEXUS Tools. Today is ${today}.
+    const data = await callAPI(text);
 
-MANDATORY: You MUST call web_search before answering any of these:
-- Who is the president / prime minister / leader / CEO of any country or company
-- Any current events, latest news, recent scores, live prices, stock values
-- Anything that changes over time (elections, appointments, recent launches, rankings)
-- Any question using words like "current", "now", "today", "latest", "recent"
-Never guess for the above — search first, answer from results.
-
-You can answer directly (no search needed) for: history, science, math, how things work, concepts.
-
-You also assist users with 100+ free tools: ${toolList}.
-
-Style: Be direct — give the answer first, then brief context. 2-4 sentences, plain conversational text, no markdown or asterisks. If a NEXUS tool fits, mention it and end with: arrow Use [Tool Name]`;
-
-    const callAPI = async (messages) => {
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1024,
-          system: systemPrompt,
-          tools: [{type: "web_search_20250305", name: "web_search"}],
-          messages: messages
-        })
-      });
-      return await resp.json();
-    };
-
-    // Agentic loop — handles web search tool use automatically
-    // The Anthropic API's built-in web_search tool performs the search server-side
-    // and returns results in tool_result blocks within the response content.
-    // We simply relay the full assistant turn and pass back the tool_result blocks
-    // that the API itself provided — no empty strings, no manual searching needed.
-    let messages = [...aiHistory];
-    let data = await callAPI(messages);
-    let loopGuard = 0;
-
-    while (data.stop_reason === 'tool_use' && loopGuard++ < 5) {
-      if (!data.content || !data.content.length) break;
-
-      const toolUseBlocks = data.content.filter(b => b.type === 'tool_use');
-      if (!toolUseBlocks.length) break;
-
-      // Relay the full assistant content (includes tool_use blocks)
-      messages.push({ role: 'assistant', content: data.content });
-
-      // For each tool_use, build a tool_result.
-      // The API's web_search tool already ran and put results inside each tool_use block's
-      // `output` field (or as sibling tool_result blocks). Pass them back properly.
-      const toolResults = toolUseBlocks.map(tb => {
-        // Try to get the search results the server already computed
-        const resultContent = tb.output
-          ? (typeof tb.output === 'string' ? tb.output : JSON.stringify(tb.output))
-          : 'Search completed. Please use your knowledge to answer the question.';
-        return {
-          type: 'tool_result',
-          tool_use_id: tb.id,
-          content: resultContent
-        };
-      });
-
-      messages.push({ role: 'user', content: toolResults });
-      data = await callAPI(messages);
-    }
-
-    // Extract the final text reply
-    const reply = data.content
-      ? data.content.filter(b => b.type === 'text').map(b => b.text).join(' ').trim()
-      : '';
-    const finalReply = reply || "I couldn't find a clear answer on that. Try rephrasing or ask me something else!";
+    const finalReply = data.reply || "Sorry, I couldn't generate a response.";
 
     indicator.remove();
     aiAddBotMsg(finalReply);
@@ -2671,7 +2619,7 @@ Style: Be direct — give the answer first, then brief context. 2-4 sentences, p
 
   } catch(e) {
     indicator.remove();
-    aiAddBotMsg("Hmm, I'm having trouble connecting right now. Try again in a moment!");
+    aiAddBotMsg("Connection error. Please try again.");
   }
   aiIsTyping = false;
   document.getElementById('ai-send').disabled = false;
@@ -3926,17 +3874,8 @@ async function genAIPrompt(){
   };
 
   try {
-    const resp = await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:500,
-        messages:[{role:"user",content:`${typeGuides[type]} ${detailGuide[detail]} Output only the final prompt text, nothing else — no intro, no labels, just the prompt itself.`}]
-      })
-    });
-    const data = await resp.json();
-    const prompt = data.content?.[0]?.text || 'Unable to generate prompt. Please try again.';
+    const data = await callAPI(`${typeGuides[type]} ${detailGuide[detail]} Output only the final prompt text, nothing else — no intro, no labels, just the prompt itself.`);
+    const prompt = data.reply || 'Unable to generate prompt. Please try again.';
     document.getElementById('ai-prompt-output').textContent = prompt;
     document.getElementById('ai-result').classList.add('show');
   } catch(e) {
@@ -3995,15 +3934,8 @@ async function genCaption(){
   document.getElementById('cap-loading').style.display='block';
   document.getElementById('cap-output').innerHTML='';
   try{
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",max_tokens:600,
-        messages:[{role:"user",content:`Generate 3 viral, engaging ${platform} captions for: "${topic}". Tone: ${tone}. Each caption should feel native to ${platform} with relevant emojis and hashtags where appropriate. Separate each caption with --- on its own line. Output only the captions, no labels or numbering.`}]
-      })
-    });
-    const data=await resp.json();
-    const text=data.content?.[0]?.text||'';
+    const data=await callAPI(`Generate 3 viral, engaging ${platform} captions for: "${topic}". Tone: ${tone}. Each caption should feel native to ${platform} with relevant emojis and hashtags where appropriate. Separate each caption with --- on its own line. Output only the captions, no labels or numbering.`);
+    const text=data.reply||'';
     const captions=text.split(/\n---\n/).map(s=>s.trim()).filter(Boolean);
     document.getElementById('cap-output').innerHTML=captions.map(c=>{
       const safe=c.replace(/'/g,"\\'").replace(/\n/g,'\\n');
@@ -4082,15 +4014,8 @@ async function genBio(){
   document.getElementById('bio-loading').style.display='block';
   document.getElementById('bio-result').classList.remove('show');
   try{
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",max_tokens:300,
-        messages:[{role:"user",content:`Write a ${tone.toLowerCase()} professional bio for ${platform} for: Name: ${name}, Role: ${role}, Skills/Interests: ${skills}. Make it authentic, engaging, and optimized for ${platform}. Keep it under 150 words. Output only the bio text, nothing else.`}]
-      })
-    });
-    const data=await resp.json();
-    document.getElementById('bio-output').textContent=data.content?.[0]?.text||'Unable to generate. Please try again.';
+    const data=await callAPI(`Write a ${tone.toLowerCase()} professional bio for ${platform} for: Name: ${name}, Role: ${role}, Skills/Interests: ${skills}. Make it authentic, engaging, and optimized for ${platform}. Keep it under 150 words. Output only the bio text, nothing else.`);
+    document.getElementById('bio-output').textContent=data.reply||'Unable to generate. Please try again.';
     document.getElementById('bio-result').classList.add('show');
   }catch(e){
     document.getElementById('bio-output').textContent='Connection error. Please try again.';

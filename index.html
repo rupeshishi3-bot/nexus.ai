@@ -220,7 +220,11 @@ body{
   color:var(--text);
   font-family:var(--font-body);
   line-height:1.6;
-  overflow-x:hidden;
+  /* NOTE: overflow-x:hidden intentionally removed from body.
+     Setting overflow on <body> or <html> makes the body become the scroll
+     container instead of the viewport, which silently kills position:sticky
+     on every descendant — including #filter-bar. Horizontal overflow is
+     now contained on .site-wrap which does NOT affect sticky. */
   cursor:none;
   transition:background .4s ease, color .4s ease;
 }
@@ -234,7 +238,7 @@ nav, .modal-box, .cmd-box, #ai-panel, .tool-card, .cat-card, .price-card,
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
 
-/* CURSOR — desktop only */
+/* CURSOR */
 #cursor{
   position:fixed;width:10px;height:10px;border-radius:50%;
   background:var(--accent);pointer-events:none;z-index:9999;
@@ -245,27 +249,16 @@ nav, .modal-box, .cmd-box, #ai-panel, .tool-card, .cat-card, .price-card,
   border:1px solid rgba(91,141,238,0.5);pointer-events:none;z-index:9998;
   transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s,transform .1s,opacity .3s;
 }
-/* On mobile: hide custom cursor, restore native cursor on all elements */
-@media (max-width:768px) {
-  #cursor, #cursor-ring { display: none !important; }
-  body { cursor: auto !important; }
-  button, a, [onclick], .tool-card, .cat-card, .trend-tag, .recent-tag,
-  .tab-btn, .blog-card, .fav-btn, .nav-theme, .modal-close, .ai-chip,
-  .social-btn, .share-btn, .copy-btn, .btn, .price-card,
-  .hero-quick-btn, .filter-restore-fab, .back-to-tools-fab,
-  .suggest-pill, .premium-nudge button {
-    cursor: pointer !important;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-}
 
-/* CANVAS BG — desktop only for perf */
+/* CANVAS BG */
 #bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.5;}
-@media(max-width:768px){#bg-canvas{display:none}}
 
 /* LAYOUT */
-.site-wrap{position:relative;z-index:1}
+.site-wrap{
+  position:relative;
+  z-index:1;
+  overflow-x:hidden; /* horizontal bleed contained here — safe for sticky children */
+}
 
 /* NAV */
 nav{
@@ -1271,60 +1264,61 @@ footer{
 .tool-card-fav-wrap{position:absolute;top:0.75rem;right:0.75rem;z-index:2}
 
 /* ═══════════════════════════════════════════
-   MOBILE SMART FILTER BAR — AUTO-HIDE + REAPPEAR
+   MOBILE AUTO-HIDE FILTER BAR
    ═══════════════════════════════════════════ */
 
-/* Desktop: static in flow */
+/* Desktop default — static, in normal document flow */
 #filter-bar {
   position: relative;
   z-index: 90;
 }
 
-/* ── FLOATING CATEGORY PILL ROW (bottom of screen, mobile) ── */
-#cat-float-bar {
-  display: none;
-}
-
 @media (max-width: 768px) {
-  /* Filter bar: sticky but NOT glassmorphism wall. 
-     Transitions smoothly up/down based on scroll direction.
-     Uses translateY so layout doesn't collapse — no content jump. */
+  /* ── STICKY FILTER BAR ──
+     Critical: sticky works relative to the nearest scroll ancestor.
+     The scroll ancestor here is the viewport (body/html), which is correct
+     now that overflow-x:hidden has been moved off <body>.
+     The bar sticks 64px below the fixed nav. */
   #filter-bar {
     position: sticky;
     top: 64px;
+    /* Pull left/right to bleed past section padding (1rem) AND .container padding */
     left: 0;
     right: 0;
+    /* Use a large negative margin to escape the container's padding */
+    margin-left: calc(-1rem - ((100vw - 100%) / 2));
+    margin-right: calc(-1rem - ((100vw - 100%) / 2));
+    /* Simpler, more reliable approach: use width + left offset */
+    width: 100vw;
+    /* Glassmorphism */
+    background: rgba(4, 5, 8, 0.88);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 0.55rem 1rem;
     z-index: 90;
-    background: rgba(4, 5, 8, 0.90);
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 0.5rem 1rem;
-    margin: 0 -1rem;
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity   0.28s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.2s;
-    will-change: transform, opacity;
     box-sizing: border-box;
-    /* Subtle bottom shadow to lift it visually */
-    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    /* THE HIDE ANIMATION — transform on sticky works correctly once
+       body overflow-x:hidden is removed */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity   0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform, opacity;
   }
 
-  /* Hidden state — slides up behind the nav */
+  /* ── HIDDEN STATE — slides up behind the nav ── */
   #filter-bar.filter-bar--hidden {
     transform: translateY(-110%);
     opacity: 0;
     pointer-events: none;
-    box-shadow: none;
   }
 
-  /* The tab row inside */
+  /* ── TAB ROW inside the bar ── */
   #filter-bar #filter-tabs {
     margin-top: 0;
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
-    gap: 0.4rem;
+    gap: 0.45rem;
     scrollbar-width: none;
     -ms-overflow-style: none;
     -webkit-mask-image: linear-gradient(to right, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
@@ -1333,40 +1327,33 @@ footer{
   }
   #filter-bar #filter-tabs::-webkit-scrollbar { display: none; }
 
-  /* Larger touch targets on mobile tab pills */
+  /* ── TAB PILLS ── */
   #filter-bar .tab-btn {
     flex-shrink: 0;
-    padding: 0.4rem 0.95rem;
+    padding: 0.45rem 1rem;
     font-size: 0.8rem;
-    border-radius: 100px; /* pill shape */
+    border-radius: 100px;
     min-height: 36px;
     white-space: nowrap;
-    cursor: pointer; /* override cursor:none on mobile */
+    cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Active pill — stronger glow for easy thumb-scanning */
+  /* ── ACTIVE PILL ── */
   #filter-bar .tab-btn.active {
     background: rgba(91, 141, 238, 0.18);
     border-color: rgba(91, 141, 238, 0.5);
     box-shadow: 0 0 12px rgba(91, 141, 238, 0.2);
   }
 
-  /* Compensate space so the sticky bar doesn't sit on content
-     when the page first loads or when it reappears */
+  /* ── Compensate the space the sticky bar occupies so tools content isn't hidden under it ── */
   #tools .container {
-    padding-top: 0.5rem; /* section already has padding-top */
+    padding-top: 0.5rem;
   }
 
   /* ── ADDITIONAL MOBILE UX IMPROVEMENTS ── */
-
-  /* 1. Tighter hero on small screens — reclaim ~40px vertical space */
-  .hero {
-    padding: 72px 1rem 48px;
-  }
-
-  /* 2. Hero stats: 2×2 grid instead of single row to avoid overflow */
+  .hero { padding: 72px 1rem 48px; }
   .hero-stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1377,402 +1364,59 @@ footer{
   .hero-divider { display: none; }
   .hero-stat { text-align: center; }
   .stat-val { font-size: 1.5rem; }
-
-  /* 3. Remove decorative elements that burn screen space on mobile */
   .scroll-ind { display: none; }
-  .blob { opacity: 0.4; } /* dim but keep for aesthetics */
-
-  /* 4. Section vertical padding — tighter on mobile */
+  .blob { opacity: 0.4; }
   section { padding: 3rem 1rem; }
-
-  /* 5. Tools grid: tighter gap + full-width cards */
-  .tools-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  /* 6. Tool cards: better touch UX */
+  .tools-grid { grid-template-columns: 1fr; gap: 0.75rem; }
   .tool-card {
     padding: 1.25rem;
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    /* Disable hover transforms on touch — no mouse */
     transition: box-shadow 0.2s, border-color 0.2s;
   }
-  .tool-card:active {
-    transform: scale(0.985);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  }
-  .tool-card:hover {
-    transform: none;
-  }
-
-  /* 7. Category grid: 2-col on mobile (was auto-fill ~180px) */
-  .cat-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-  }
-  .cat-card {
-    padding: 1.25rem 1rem;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
+  .tool-card:active { transform: scale(0.985); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+  .tool-card:hover { transform: none; }
+  .cat-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.5rem; }
+  .cat-card { padding: 1.25rem 1rem; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .cat-card:hover { transform: none; }
   .cat-card:active { transform: scale(0.97); }
-
-  /* 8. Featured banner — stack vertically, remove floating emoji */
-  .featured-banner {
-    padding: 1.5rem;
-    gap: 1rem;
-  }
+  .featured-banner { padding: 1.5rem; gap: 1rem; }
   .fb-visual { display: none; }
   .fb-title { font-size: 1.35rem; }
   .fb-sub { font-size: 0.9rem; }
-
-  /* 9. Stats bar — 2-col grid on mobile */
-  .stats-bar {
-    grid-template-columns: 1fr 1fr;
-    margin-bottom: 3rem;
-  }
+  .stats-bar { grid-template-columns: 1fr 1fr; margin-bottom: 3rem; }
   .stat-block { padding: 1.25rem 1rem; }
   .sb-val { font-size: 1.75rem; }
-
-  /* 10. Ad slot — compact */
   .ad-slot { padding: 0.875rem 1rem; font-size: 0.75rem; margin: 1rem 0; }
-
-  /* 11. Toast: safe area inset for iPhone home indicator */
-  #toast {
-    bottom: calc(1rem + env(safe-area-inset-bottom));
-    left: 1rem;
-    right: 1rem;
-  }
-
-  /* 12. AI orb: safe area */
-  #ai-orb {
-    bottom: calc(1.25rem + env(safe-area-inset-bottom));
-    left: 1.25rem;
-  }
-
-  /* 13. Nav search button: hide text on tiny screens, keep icon */
+  #toast { bottom: calc(1rem + env(safe-area-inset-bottom)); left: 1rem; right: 1rem; }
+  #ai-orb { bottom: calc(1.25rem + env(safe-area-inset-bottom)); left: 1.25rem; }
   .nav-search-btn .kbd { display: none; }
-  @media (max-width: 380px) {
-    .nav-search-btn span:not(.kbd) { display: none; }
-  }
-
-  /* 14. Form rows: single col on mobile */
+  @media (max-width: 380px) { .nav-search-btn span:not(.kbd) { display: none; } }
   .form-row { grid-template-columns: 1fr; }
-
-  /* 15. Testimonials: single col */
   .testi-grid { grid-template-columns: 1fr; gap: 0.75rem; }
-
-  /* 16. Pricing: single col */
   .pricing-grid { grid-template-columns: 1fr; }
   .price-card { padding: 1.5rem 1.25rem; }
-
-  /* 17. Newsletter form: stack */
   .nl-form { flex-direction: column; }
   .newsletter { padding: 2rem 1.25rem; }
   .nl-title { font-size: 1.5rem; }
-
-  /* 18. Blog grid: single col */
   .blog-grid { grid-template-columns: 1fr; gap: 0.75rem; }
-
-  /* 19. Trending strip: better touch scroll */
-  .trending-strip {
-    padding: 1.5rem 0 0.75rem;
-    gap: 0.5rem;
-  }
-  .trend-tag {
-    padding: 0.45rem 0.875rem;
-    font-size: 0.8rem;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* 20. Section headings: tighter */
+  .trending-strip { padding: 1.5rem 0 0.75rem; gap: 0.5rem; }
+  .trend-tag { padding: 0.45rem 0.875rem; font-size: 0.8rem; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   h2.section-title { font-size: 1.6rem; margin-bottom: 0.5rem; }
   .section-desc { font-size: 0.9375rem; }
 }
 
-/* Light mode adjustments for filter bar */
+/* Light mode adjustments for filter bar — works on all sizes */
 .light-mode #filter-bar {
-  background: rgba(250, 248, 244, 0.93);
+  background: rgba(250, 248, 244, 0.92);
   border-bottom-color: rgba(15, 10, 5, 0.1);
-  box-shadow: 0 4px 16px rgba(15,10,5,0.08);
-}
-
-/* ── FLOATING FILTER RESTORE BUTTON (appears when bar is hidden) ── */
-#filter-restore-fab {
-  display: none;
-  position: fixed;
-  bottom: calc(5.5rem + env(safe-area-inset-bottom));
-  right: 1.25rem;
-  z-index: 140;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 100px;
-  padding: 0.5rem 1rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-family: var(--font-body);
-  box-shadow: 0 4px 20px rgba(91,141,238,0.45);
-  cursor: pointer;
-  transform: translateY(20px);
-  opacity: 0;
-  transition: transform 0.25s cubic-bezier(0.34,1.56,.64,1), opacity 0.2s;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-}
-#filter-restore-fab.visible {
-  transform: translateY(0);
-  opacity: 1;
-}
-@media (max-width: 768px) {
-  #filter-restore-fab {
-    display: block;
-  }
-}
-.light-mode #filter-restore-fab {
-  background: var(--accent);
-}
-
-/* ── "OPEN TOOL" CTA ROW on tool cards (mobile: always visible) ── */
-.tool-card-cta {
-  display: none;
-}
-@media (max-width: 768px) {
-  .tool-card-cta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border);
-  }
-  .tool-card-cta-label {
-    font-size: 0.78rem;
-    color: var(--accent);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-  }
-  .tool-card-cta-arrow {
-    font-size: 0.85rem;
-    color: var(--accent);
-    transition: transform 0.15s;
-  }
-  .tool-card:active .tool-card-cta-arrow {
-    transform: translateX(4px);
-  }
-}
-
-/* ── POPULAR BADGE PULSE ANIMATION ── */
-.badge-hot {
-  animation: hotPulse 3s ease infinite;
-}
-@keyframes hotPulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(240,99,90,0); }
-  50% { box-shadow: 0 0 0 3px rgba(240,99,90,0.12); }
-}
-
-/* ── TOOL USES BADGE (social proof) ── */
-.tool-uses-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.72rem;
-  font-family: var(--font-mono);
-  color: var(--text3);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  padding: 0.15rem 0.5rem;
-}
-
-/* ── INLINE AD SLOT — between tool cards ── */
-.ad-inline {
-  grid-column: 1 / -1;
-  background: var(--surface);
-  border: 1px dashed var(--border2);
-  border-radius: var(--r);
-  padding: 1rem;
-  text-align: center;
-  color: var(--text3);
-  font-size: 0.78rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-height: 80px;
-}
-
-/* ── SECTION DIVIDER AD (high-visibility, non-intrusive) ── */
-.ad-banner-strip {
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 1rem 2rem;
-  text-align: center;
-  color: var(--text3);
-  font-size: 0.8rem;
-  margin: 0;
-}
-
-/* ── "TRY MORE TOOLS" SUGGESTION STRIP ── */
-.suggest-strip {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding: 0.5rem 0 1rem;
-  scrollbar-width: none;
-}
-.suggest-strip::-webkit-scrollbar { display: none; }
-.suggest-pill {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.9rem;
-  border-radius: 100px;
-  background: linear-gradient(135deg, rgba(91,141,238,0.1), rgba(124,109,250,0.08));
-  border: 1px solid rgba(91,141,238,0.2);
-  font-size: 0.8rem;
-  color: var(--accent);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: 0.2s;
-  -webkit-tap-highlight-color: transparent;
-}
-.suggest-pill:hover, .suggest-pill:active {
-  background: rgba(91,141,238,0.18);
-  border-color: rgba(91,141,238,0.4);
-}
-
-/* ── "USED X TIMES" SOCIAL PROOF COUNTER ── */
-.tool-social-proof {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.6rem;
-  font-size: 0.72rem;
-  color: var(--text3);
-}
-.tool-social-proof-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--green);
-  flex-shrink: 0;
-}
-
-/* ── HERO QUICK-ACCESS BUTTONS (2 top tools above fold) ── */
-.hero-quick-tools {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-bottom: 2rem;
-  animation: fadeUp .9s ease .35s both;
-}
-.hero-quick-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: 100px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text2);
-  font-size: 0.875rem;
-  font-family: var(--font-body);
-  cursor: pointer;
-  transition: 0.2s;
-  text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-.hero-quick-btn:hover, .hero-quick-btn:active {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(91,141,238,0.1);
-}
-@media (max-width: 480px) {
-  .hero-quick-tools { gap: 0.5rem; }
-  .hero-quick-btn { font-size: 0.82rem; padding: 0.5rem 1rem; }
-}
-
-/* ── PREMIUM UPGRADE NUDGE STRIP (after ~8 tools) ── */
-.premium-nudge {
-  grid-column: 1 / -1;
-  background: linear-gradient(135deg, rgba(91,141,238,0.1), rgba(124,109,250,0.08));
-  border: 1px solid rgba(91,141,238,0.2);
-  border-radius: var(--r2);
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.premium-nudge-text {
-  font-size: 0.9rem;
-  color: var(--text2);
-}
-.premium-nudge-text strong {
-  color: var(--text);
-}
-
-/* ── SCROLL PROGRESS INDICATOR ── */
-#scroll-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
-  z-index: 200;
-  transition: width 0.1s linear;
-  pointer-events: none;
-}
-
-/* ── "BACK TO TOOLS" FLOATING BUTTON (shows when scrolled past tools) ── */
-#back-to-tools-fab {
-  display: none;
-  position: fixed;
-  bottom: calc(1.25rem + env(safe-area-inset-bottom));
-  right: 1.25rem;
-  z-index: 140;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: #fff;
-  border: none;
-  border-radius: 100px;
-  padding: 0.65rem 1.1rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  font-family: var(--font-body);
-  box-shadow: 0 4px 20px rgba(91,141,238,0.4);
-  cursor: pointer;
-  transform: translateY(20px);
-  opacity: 0;
-  transition: transform 0.25s cubic-bezier(0.34,1.56,.64,1), opacity 0.2s;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-}
-#back-to-tools-fab.visible {
-  transform: translateY(0);
-  opacity: 1;
-}
-@media (max-width: 768px) {
-  #back-to-tools-fab { display: block; }
 }
 
 /* Very small phones (iPhone SE etc.) */
 @media (max-width: 380px) {
   #filter-bar {
-    padding: 0.5rem 0.75rem;
+    padding: 0.45rem 0.75rem;
   }
   #filter-bar .tab-btn {
     padding: 0.4rem 0.8rem;
@@ -2030,9 +1674,6 @@ footer{
 </head>
 <body>
 
-<!-- SCROLL PROGRESS -->
-<div id="scroll-progress"></div>
-
 <!-- CUSTOM CURSOR -->
 <div id="cursor"></div>
 <div id="cursor-ring"></div>
@@ -2124,12 +1765,6 @@ footer{
   <a href="javascript:openCmd()" onclick="closeMobileMenu()">🔍 Search All Tools</a>
 </div>
 
-<!-- FLOATING FILTER RESTORE FAB (mobile — shows when filter bar is hidden) -->
-<button id="filter-restore-fab" onclick="restoreFilterBar()" aria-label="Show category filters">⚡ Filter Tools</button>
-
-<!-- BACK TO TOOLS FAB (shows when user scrolls past the tools section) -->
-<button id="back-to-tools-fab" onclick="scrollToTools()" aria-label="Back to tools">↑ Tools</button>
-
 <div class="site-wrap">
 <main id="main-content" role="main" aria-label="NEXUS Tools Main Content">
 
@@ -2150,14 +1785,6 @@ footer{
   </h1>
 
   <p class="hero-sub">The next-generation utility platform. Finance, AI, productivity, health, converters — all in one place. Built for speed. Designed for the future. India's most comprehensive free calculator suite with EMI calculator, GST calculator, BMI calculator, SIP planner, and 100+ more tools.</p>
-
-  <!-- QUICK ACCESS HERO BUTTONS — top 4 tools always above fold -->
-  <div class="hero-quick-tools">
-    <button class="hero-quick-btn" onclick="openTool('emi')">📊 EMI Calc</button>
-    <button class="hero-quick-btn" onclick="openTool('gst')">🧾 GST Calc</button>
-    <button class="hero-quick-btn" onclick="openTool('bmi')">⚖️ BMI Calc</button>
-    <button class="hero-quick-btn" onclick="openTool('qr')">📱 QR Code</button>
-  </div>
 
   <div class="hero-search-wrap">
     <div class="hero-search" onclick="this.querySelector('input').focus()">
@@ -2204,11 +1831,6 @@ footer{
     <div class="trending-strip" id="trending-strip"></div>
   </div>
 </section>
-
-<!-- AD BANNER STRIP — between trending and stats (high visibility, non-intrusive) -->
-<div class="ad-banner-strip" role="complementary" aria-label="Advertisement">
-  📢 Advertisement · <a href="javascript:void(0)" onclick="showToast('Email: advertise@nexustools.app','📧')" style="color:var(--accent)">Advertise with us</a>
-</div>
 
 <!-- STATS BAR -->
 <section style="padding:0 2rem 5rem">
@@ -2274,10 +1896,9 @@ footer{
       </div>
     </div>
 
-    <div class="tools-grid" id="tools-grid"></div>
+    <div class="ad-slot">📢 Advertisement · Your ad could be here · <a href="javascript:void(0)" onclick="showToast('Email: advertise@nexustools.app','📧')" style="color:var(--accent)">Advertise with us</a></div>
 
-    <!-- Ad slot AFTER tools — not blocking discovery -->
-    <div class="ad-slot" style="margin-top:2rem">📢 Advertisement · Your ad could be here · <a href="javascript:void(0)" onclick="showToast('Email: advertise@nexustools.app','📧')" style="color:var(--accent)">Advertise with us</a></div>
+    <div class="tools-grid" id="tools-grid"></div>
   </div>
 </section>
 
@@ -2748,42 +2369,38 @@ let currentTool = null;
 let isLightMode = false;
 
 // ═══════════════════════════════════════════
-// CURSOR — desktop only
+// CURSOR
 // ═══════════════════════════════════════════
 const cursor = document.getElementById('cursor');
 const cursorRing = document.getElementById('cursor-ring');
-if(window.innerWidth>768){
-  let curX=-100,curY=-100,ringX=-100,ringY=-100;
-  cursor.style.opacity='0';
-  cursorRing.style.opacity='0';
-  document.addEventListener('mousemove',e=>{
-    curX=e.clientX;curY=e.clientY;
-    cursor.style.left=curX+'px';cursor.style.top=curY+'px';
-    cursor.style.opacity='1';
-    cursorRing.style.opacity='1';
-  });
-  function animRing(){
-    ringX+=(curX-ringX)*0.12;
-    ringY+=(curY-ringY)*0.12;
-    cursorRing.style.left=ringX+'px';cursorRing.style.top=ringY+'px';
-    requestAnimationFrame(animRing);
-  }
-  animRing();
-  document.addEventListener('mousedown',()=>{cursor.style.width='6px';cursor.style.height='6px'});
-  document.addEventListener('mouseup',()=>{cursor.style.width='10px';cursor.style.height='10px'});
-  document.querySelectorAll('button,a,[onclick]').forEach(el=>{
-    el.addEventListener('mouseenter',()=>{cursorRing.style.width='54px';cursorRing.style.height='54px';cursorRing.style.borderColor='rgba(91,141,238,0.8)'});
-    el.addEventListener('mouseleave',()=>{cursorRing.style.width='36px';cursorRing.style.height='36px';cursorRing.style.borderColor='rgba(91,141,238,0.5)'});
-  });
+let curX=-100,curY=-100,ringX=-100,ringY=-100;
+cursor.style.opacity='0';
+cursorRing.style.opacity='0';
+document.addEventListener('mousemove',e=>{
+  curX=e.clientX;curY=e.clientY;
+  cursor.style.left=curX+'px';cursor.style.top=curY+'px';
+  cursor.style.opacity='1';
+  cursorRing.style.opacity='1';
+});
+function animRing(){
+  ringX+=(curX-ringX)*0.12;
+  ringY+=(curY-ringY)*0.12;
+  cursorRing.style.left=ringX+'px';cursorRing.style.top=ringY+'px';
+  requestAnimationFrame(animRing);
 }
+animRing();
+document.addEventListener('mousedown',()=>{cursor.style.width='6px';cursor.style.height='6px'});
+document.addEventListener('mouseup',()=>{cursor.style.width='10px';cursor.style.height='10px'});
+document.querySelectorAll('button,a,[onclick]').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursorRing.style.width='54px';cursorRing.style.height='54px';cursorRing.style.borderColor='rgba(91,141,238,0.8)'});
+  el.addEventListener('mouseleave',()=>{cursorRing.style.width='36px';cursorRing.style.height='36px';cursorRing.style.borderColor='rgba(91,141,238,0.5)'});
+});
 
 // ═══════════════════════════════════════════
-// CANVAS PARTICLES — desktop only (disabled on mobile for perf)
+// CANVAS PARTICLES
 // ═══════════════════════════════════════════
 (function(){
-  if(window.innerWidth<=768)return; // skip entirely on mobile
   const canvas=document.getElementById('bg-canvas');
-  if(!canvas)return;
   const ctx=canvas.getContext('2d');
   let W,H,particles=[];
   function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
@@ -2907,45 +2524,25 @@ function renderFilterTabs(){
 function renderTools(filter='all'){
   const grid=document.getElementById('tools-grid');
   const filtered=filter==='all'?TOOLS:TOOLS.filter(t=>t.cat===filter);
-  let html='';
-  filtered.forEach((tool,idx)=>{
+  grid.innerHTML=filtered.map(tool=>{
     const isFav=favorites.includes(tool.id);
-    const badgeHTML=tool.badge?`<span class="tool-badge badge-${tool.badge}">${tool.badge==='hot'?'🔥 HOT':tool.badge==='new'?'✨ NEW':tool.badge==='ai'?'✦ AI':tool.badge.toUpperCase()}</span>`:'';
-    
-    html+=`<div class="tool-card" style="--tc-a:${tool.color}" onclick="openTool('${tool.id}')" role="button" tabindex="0" aria-label="Open ${tool.name}">
+    const badgeHTML=tool.badge?`<span class="tool-badge badge-${tool.badge}">${tool.badge.toUpperCase()}</span>`:'';
+    return `<div class="tool-card" style="--tc-a:${tool.color}" onclick="openTool('${tool.id}')">
       <div class="tool-card-top">
         <div class="tool-icon" style="background:${tool.color}">${tool.icon}</div>
         <div style="display:flex;align-items:center;gap:0.5rem">
           ${badgeHTML}
-          <button class="fav-btn${isFav?' active':''}" onclick="event.stopPropagation();toggleFav('${tool.id}',this)" title="Favorite" aria-label="${isFav?'Remove from favorites':'Add to favorites'}">${isFav?'★':'☆'}</button>
+          <button class="fav-btn${isFav?' active':''}" onclick="event.stopPropagation();toggleFav('${tool.id}',this)" title="Favorite">${isFav?'★':'☆'}</button>
         </div>
       </div>
       <div class="tool-name">${tool.name}</div>
       <div class="tool-desc">${tool.desc}</div>
       <div class="tool-meta">
-        <span class="tool-social-proof"><span class="tool-social-proof-dot"></span>${tool.uses} uses</span>
+        <span class="tool-meta-uses">${tool.uses} uses</span>
         <span style="color:var(--text3)">· ${tool.cat}</span>
       </div>
-      <div class="tool-card-cta">
-        <span class="tool-card-cta-label">Open Tool</span>
-        <span class="tool-card-cta-arrow">→</span>
-      </div>
     </div>`;
-
-    // Inline ad after every 8 cards (revenue optimization)
-    if((idx+1)%8===0 && idx<filtered.length-1){
-      html+=`<div class="ad-inline" role="complementary" aria-label="Advertisement">📢 Advertisement</div>`;
-    }
-
-    // Premium nudge after 16 cards (conversion optimization)
-    if((idx+1)===16 && filtered.length>16){
-      html+=`<div class="premium-nudge">
-        <div class="premium-nudge-text"><strong>⚡ Pro Tip:</strong> Upgrade to Pro for no ads, PDF exports, and API access — ₹199/mo</div>
-        <button class="btn btn-primary" style="font-size:0.8rem;padding:0.5rem 1rem;white-space:nowrap" onclick="selectPlan('pro')">Go Pro →</button>
-      </div>`;
-    }
-  });
-  grid.innerHTML=html;
+  }).join('');
 }
 
 function filterTools(cat,btn){
@@ -3245,25 +2842,6 @@ function openModal(html){
   document.getElementById('modal-content').innerHTML=html;
   document.getElementById('tool-modal').classList.add('open');
   document.body.style.overflow='hidden';
-  
-  // Add "Try these tools next" suggestions at bottom of modal
-  setTimeout(()=>{
-    const box=document.getElementById('modal-content');
-    if(!box)return;
-    // Find which tool this modal is for
-    const titleEl=box.querySelector('.modal-title');
-    const toolName=titleEl?titleEl.textContent.trim():'';
-    const currentTool=TOOLS.find(t=>t.name===toolName);
-    if(!currentTool)return;
-    // Pick 3 tools from same category (or related) that aren't current
-    const related=TOOLS.filter(t=>t.cat===currentTool.cat && t.id!==currentTool.id).slice(0,3);
-    if(related.length<1)return;
-    const strip=document.createElement('div');
-    strip.style.cssText='padding:0 1.5rem 1.5rem';
-    strip.innerHTML=`<div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:0.6rem">Try Also</div>
-      <div class="suggest-strip">${related.map(t=>`<div class="suggest-pill" onclick="closeModal();setTimeout(()=>openTool('${t.id}'),200)">${t.icon} ${t.name}</div>`).join('')}</div>`;
-    box.appendChild(strip);
-  },100);
 }
 function closeModal(){
   document.getElementById('tool-modal').classList.remove('open');
@@ -5067,104 +4645,6 @@ function convertTZ(){
 }
 
 // ═══════════════════════════════════════════
-// SMART FILTER BAR — AUTO-HIDE ON SCROLL DOWN, REAPPEAR ON SCROLL UP
-// ═══════════════════════════════════════════
-function initSmartFilterBar(){
-  var filterBar=document.getElementById('filter-bar');
-  var restoreFab=document.getElementById('filter-restore-fab');
-  var backToToolsFab=document.getElementById('back-to-tools-fab');
-  var scrollProgress=document.getElementById('scroll-progress');
-  var toolsSection=document.getElementById('tools');
-  
-  if(!filterBar) return;
-  
-  var lastScrollY=window.scrollY;
-  var filterBarHidden=false;
-  var toolsSectionTop=0;
-  var toolsSectionBottom=0;
-  var ticking=false;
-
-  function updateToolsPos(){
-    if(toolsSection){
-      var r=toolsSection.getBoundingClientRect();
-      toolsSectionTop=r.top+window.scrollY;
-      toolsSectionBottom=toolsSectionTop+toolsSection.offsetHeight;
-    }
-  }
-  updateToolsPos();
-  window.addEventListener('resize', updateToolsPos, {passive:true});
-
-  function onScroll(){
-    if(ticking)return;
-    ticking=true;
-    requestAnimationFrame(function(){
-      var currentY=window.scrollY;
-      var docH=document.documentElement.scrollHeight-window.innerHeight;
-      
-      // Scroll progress bar
-      if(scrollProgress && docH>0){
-        scrollProgress.style.width=(currentY/docH*100)+'%';
-      }
-
-      // Only apply auto-hide on mobile
-      if(window.innerWidth<=768){
-        var delta=currentY-lastScrollY;
-        var isInToolsSection=currentY>=(toolsSectionTop-100) && currentY<=(toolsSectionBottom+200);
-        
-        if(isInToolsSection){
-          if(delta>4 && !filterBarHidden && currentY>toolsSectionTop+120){
-            filterBar.classList.add('filter-bar--hidden');
-            filterBarHidden=true;
-            if(restoreFab) restoreFab.classList.add('visible');
-          }
-          if(delta<-8 && filterBarHidden){
-            filterBar.classList.remove('filter-bar--hidden');
-            filterBarHidden=false;
-            if(restoreFab) restoreFab.classList.remove('visible');
-          }
-        } else {
-          filterBar.classList.remove('filter-bar--hidden');
-          filterBarHidden=false;
-          if(restoreFab) restoreFab.classList.remove('visible');
-        }
-        
-        if(backToToolsFab){
-          if(currentY>toolsSectionBottom+200){
-            backToToolsFab.classList.add('visible');
-          } else {
-            backToToolsFab.classList.remove('visible');
-          }
-        }
-      } else {
-        // Desktop: always show
-        filterBar.classList.remove('filter-bar--hidden');
-        filterBarHidden=false;
-        if(restoreFab) restoreFab.classList.remove('visible');
-        if(backToToolsFab) backToToolsFab.classList.remove('visible');
-      }
-
-      lastScrollY=currentY;
-      ticking=false;
-    });
-  }
-
-  window.addEventListener('scroll', onScroll, {passive:true});
-}
-
-function restoreFilterBar(){
-  var fb=document.getElementById('filter-bar');
-  var fab=document.getElementById('filter-restore-fab');
-  if(fb){ fb.classList.remove('filter-bar--hidden'); }
-  if(fab){ fab.classList.remove('visible'); }
-  if(fb){ fb.scrollIntoView({behavior:'smooth',block:'nearest'}); }
-}
-
-function scrollToTools(){
-  var el=document.getElementById('tools');
-  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-// ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
 renderCategories();
@@ -5174,27 +4654,123 @@ renderTrending();
 renderRecent();
 renderFAQ();
 
-// Initialize smart filter bar + scroll behaviors
-// (defined above in the SMART FILTER BAR block)
-// Called here to ensure DOM is fully rendered first
-setTimeout(initSmartFilterBar, 50);
-
 // ═══════════════════════════════════════════
-// NAV BACKGROUND SCROLL EFFECT (preserved)
+// NAV + FILTER BAR SCROLL BEHAVIOUR
 // ═══════════════════════════════════════════
 (function () {
   'use strict';
-  var nav = document.getElementById('main-nav');
+
+  var nav       = document.getElementById('main-nav');
+  var filterBar = document.getElementById('filter-bar');
+  var toolsSection = document.getElementById('tools');
+
+  // ── Nav background darkens on scroll ──
   function updateNavBg() {
     if (!nav) return;
     var isLight = document.body.classList.contains('light-mode');
     if (isLight) {
-      nav.style.background = window.scrollY > 50 ? 'rgba(250,248,244,0.97)' : 'rgba(250,248,244,0.82)';
+      nav.style.background = window.scrollY > 50
+        ? 'rgba(250,248,244,0.97)'
+        : 'rgba(250,248,244,0.82)';
     } else {
-      nav.style.background = window.scrollY > 50 ? 'rgba(4,5,8,0.95)' : 'rgba(4,5,8,0.7)';
+      nav.style.background = window.scrollY > 50
+        ? 'rgba(4,5,8,0.95)'
+        : 'rgba(4,5,8,0.7)';
     }
   }
-  window.addEventListener('scroll', updateNavBg, { passive: true });
+
+  // ── Auto-hide filter bar (mobile ≤768px only) ──
+  var MOBILE_BP = 768;
+  // Minimum px of scroll movement before we react (prevents micro-jitter)
+  var DELTA_DOWN = 4;   // px downward to hide
+  var DELTA_UP   = 8;   // px upward to show (slightly higher = less sensitive)
+
+  // FIX: don't capture scrollY at parse time — capture it lazily on first scroll
+  var lastScrollY = -1;
+  var ticking     = false;
+  var filterHidden = false;
+
+  // Cache the tools section top offset so we only start hiding
+  // once the user has actually scrolled INTO the tools section
+  var toolsTop = 0;
+  function cacheToolsTop() {
+    if (toolsSection) {
+      // getBoundingClientRect().top + scrollY = absolute position
+      toolsTop = toolsSection.getBoundingClientRect().top + window.scrollY;
+    }
+  }
+  // Cache on load and on resize
+  cacheToolsTop();
+  window.addEventListener('resize', cacheToolsTop, { passive: true });
+
+  function onScrollFrame() {
+    ticking = false;
+    var currentY = window.scrollY;
+
+    // FIX: initialise lastScrollY on the very first frame
+    if (lastScrollY === -1) {
+      lastScrollY = currentY;
+      updateNavBg();
+      return;
+    }
+
+    var delta = currentY - lastScrollY;
+
+    // ── Mobile-only hide/show logic ──
+    if (window.innerWidth <= MOBILE_BP && filterBar) {
+
+      // Only start reacting once user has scrolled past the tools section top
+      // (minus a small buffer so the bar hides just as tools come into view)
+      var reactionStart = toolsTop - 80;
+
+      if (currentY > reactionStart) {
+        // Scrolling DOWN → hide
+        if (delta > DELTA_DOWN && !filterHidden) {
+          filterBar.classList.add('filter-bar--hidden');
+          filterHidden = true;
+        }
+        // Scrolling UP → show
+        else if (delta < -DELTA_UP && filterHidden) {
+          filterBar.classList.remove('filter-bar--hidden');
+          filterHidden = false;
+        }
+      } else {
+        // Above the tools section — always visible
+        if (filterHidden) {
+          filterBar.classList.remove('filter-bar--hidden');
+          filterHidden = false;
+        }
+      }
+
+    } else if (filterBar) {
+      // Desktop — always visible, clear any lingering class
+      if (filterHidden) {
+        filterBar.classList.remove('filter-bar--hidden');
+        filterHidden = false;
+      }
+    }
+
+    lastScrollY = currentY;
+    updateNavBg();
+  }
+
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(onScrollFrame);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // Orientation change / resize — reset
+  window.addEventListener('resize', function () {
+    cacheToolsTop();
+    if (filterBar && window.innerWidth > MOBILE_BP) {
+      filterBar.classList.remove('filter-bar--hidden');
+      filterHidden = false;
+    }
+  }, { passive: true });
+
+  // Initial nav bg
   updateNavBg();
 }());
 
@@ -5231,33 +4807,10 @@ const revealObs=new IntersectionObserver(entries=>{
     if(e.isIntersecting){e.target.classList.add('visible');revealObs.unobserve(e.target);}
   });
 },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
-document.querySelectorAll('.cat-card,.testi-card,.blog-card,.price-card,.aff-card').forEach(el=>{
+document.querySelectorAll('.cat-card,.tool-card,.testi-card,.blog-card,.price-card,.aff-card').forEach(el=>{
   el.classList.add('reveal');
   revealObs.observe(el);
 });
-
-// Tool cards get reveal re-applied after each renderTools call via MutationObserver
-const toolsGrid=document.getElementById('tools-grid');
-if(toolsGrid){
-  const toolRevealObs=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');toolRevealObs.unobserve(e.target);}});
-  },{threshold:0.05,rootMargin:'0px 0px -20px 0px'});
-  
-  new MutationObserver(()=>{
-    toolsGrid.querySelectorAll('.tool-card:not(.visible)').forEach(el=>{
-      el.classList.add('reveal');
-      toolRevealObs.observe(el);
-    });
-  }).observe(toolsGrid,{childList:true});
-
-  // Keyboard accessibility for tool cards
-  toolsGrid.addEventListener('keydown',e=>{
-    if((e.key==='Enter'||e.key===' ') && e.target.classList.contains('tool-card')){
-      e.preventDefault();
-      e.target.click();
-    }
-  });
-}
 
 // ═══════════════════════════════════════════
 // SHARE FUNCTION

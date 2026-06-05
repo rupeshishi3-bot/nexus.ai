@@ -1254,6 +1254,248 @@ footer{
 
 /* ── TOOL CARD FAVORITE HEART ── */
 .tool-card-fav-wrap{position:absolute;top:0.75rem;right:0.75rem;z-index:2}
+
+/* ═══════════════════════════════════════════
+   MOBILE AUTO-HIDE FILTER BAR
+   ═══════════════════════════════════════════ */
+
+/* The sticky wrapper that hugs the top of the viewport */
+#filter-bar {
+  /* Default: static flow in the tools section */
+  position: relative;
+  z-index: 90;
+}
+
+@media (max-width: 768px) {
+  /* --- Filter Bar Sticky Container --- */
+  #filter-bar {
+    position: sticky;
+    top: 64px; /* sits directly below the main nav */
+    left: 0;
+    right: 0;
+    z-index: 90;
+    /* Glassmorphism panel matching the site's design language */
+    background: rgba(4, 5, 8, 0.82);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 0.6rem 1rem;
+    margin: 0 -1rem; /* bleed to viewport edges (section has 1rem padding) */
+    /* Smooth hide/show transform */
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity   0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform, opacity;
+    /* Prevent layout collapse when hidden */
+    box-sizing: border-box;
+  }
+
+  /* Hidden state (applied via JS) */
+  #filter-bar.filter-bar--hidden {
+    transform: translateY(-110%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The tab row inside — no top margin on mobile (bar handles padding) */
+  #filter-bar #filter-tabs {
+    margin-top: 0;
+    /* Horizontal scroll without scrollbar */
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.45rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* Fade edges hint for scrollability */
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 8px, black calc(100% - 8px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, black 8px, black calc(100% - 8px), transparent 100%);
+    padding: 0 6px; /* compensate mask fade */
+  }
+  #filter-bar #filter-tabs::-webkit-scrollbar { display: none; }
+
+  /* Larger touch targets on mobile tab pills */
+  #filter-bar .tab-btn {
+    flex-shrink: 0;
+    padding: 0.45rem 1rem;
+    font-size: 0.8rem;
+    border-radius: 100px; /* pill shape */
+    min-height: 36px;
+    white-space: nowrap;
+    cursor: pointer; /* override cursor:none on mobile */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Active pill — stronger glow for easy thumb-scanning */
+  #filter-bar .tab-btn.active {
+    background: rgba(91, 141, 238, 0.18);
+    border-color: rgba(91, 141, 238, 0.5);
+    box-shadow: 0 0 12px rgba(91, 141, 238, 0.2);
+  }
+
+  /* Compensate space so the sticky bar doesn't sit on content
+     when the page first loads or when it reappears */
+  #tools .container {
+    padding-top: 0.5rem; /* section already has padding-top */
+  }
+
+  /* ── ADDITIONAL MOBILE UX IMPROVEMENTS ── */
+
+  /* 1. Tighter hero on small screens — reclaim ~40px vertical space */
+  .hero {
+    padding: 72px 1rem 48px;
+  }
+
+  /* 2. Hero stats: 2×2 grid instead of single row to avoid overflow */
+  .hero-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 0.75rem;
+    width: 100%;
+    max-width: 320px;
+  }
+  .hero-divider { display: none; }
+  .hero-stat { text-align: center; }
+  .stat-val { font-size: 1.5rem; }
+
+  /* 3. Remove decorative elements that burn screen space on mobile */
+  .scroll-ind { display: none; }
+  .blob { opacity: 0.4; } /* dim but keep for aesthetics */
+
+  /* 4. Section vertical padding — tighter on mobile */
+  section { padding: 3rem 1rem; }
+
+  /* 5. Tools grid: tighter gap + full-width cards */
+  .tools-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  /* 6. Tool cards: better touch UX */
+  .tool-card {
+    padding: 1.25rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    /* Disable hover transforms on touch — no mouse */
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .tool-card:active {
+    transform: scale(0.985);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  .tool-card:hover {
+    transform: none;
+  }
+
+  /* 7. Category grid: 2-col on mobile (was auto-fill ~180px) */
+  .cat-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  .cat-card {
+    padding: 1.25rem 1rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cat-card:hover { transform: none; }
+  .cat-card:active { transform: scale(0.97); }
+
+  /* 8. Featured banner — stack vertically, remove floating emoji */
+  .featured-banner {
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+  .fb-visual { display: none; }
+  .fb-title { font-size: 1.35rem; }
+  .fb-sub { font-size: 0.9rem; }
+
+  /* 9. Stats bar — 2-col grid on mobile */
+  .stats-bar {
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 3rem;
+  }
+  .stat-block { padding: 1.25rem 1rem; }
+  .sb-val { font-size: 1.75rem; }
+
+  /* 10. Ad slot — compact */
+  .ad-slot { padding: 0.875rem 1rem; font-size: 0.75rem; margin: 1rem 0; }
+
+  /* 11. Toast: safe area inset for iPhone home indicator */
+  #toast {
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    left: 1rem;
+    right: 1rem;
+  }
+
+  /* 12. AI orb: safe area */
+  #ai-orb {
+    bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    left: 1.25rem;
+  }
+
+  /* 13. Nav search button: hide text on tiny screens, keep icon */
+  .nav-search-btn .kbd { display: none; }
+  @media (max-width: 380px) {
+    .nav-search-btn span:not(.kbd) { display: none; }
+  }
+
+  /* 14. Form rows: single col on mobile */
+  .form-row { grid-template-columns: 1fr; }
+
+  /* 15. Testimonials: single col */
+  .testi-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+
+  /* 16. Pricing: single col */
+  .pricing-grid { grid-template-columns: 1fr; }
+  .price-card { padding: 1.5rem 1.25rem; }
+
+  /* 17. Newsletter form: stack */
+  .nl-form { flex-direction: column; }
+  .newsletter { padding: 2rem 1.25rem; }
+  .nl-title { font-size: 1.5rem; }
+
+  /* 18. Blog grid: single col */
+  .blog-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+
+  /* 19. Trending strip: better touch scroll */
+  .trending-strip {
+    padding: 1.5rem 0 0.75rem;
+    gap: 0.5rem;
+  }
+  .trend-tag {
+    padding: 0.45rem 0.875rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 20. Section headings: tighter */
+  h2.section-title { font-size: 1.6rem; margin-bottom: 0.5rem; }
+  .section-desc { font-size: 0.9375rem; }
+}
+
+/* Light mode adjustments for filter bar */
+.light-mode #filter-bar {
+  background: rgba(250, 248, 244, 0.88);
+  border-bottom-color: rgba(15, 10, 5, 0.1);
+}
+
+/* Very small phones (iPhone SE etc.) */
+@media (max-width: 380px) {
+  #filter-bar {
+    padding: 0.5rem 0.75rem;
+  }
+  #filter-bar .tab-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+  }
+  .tools-grid { gap: 0.6rem; }
+  .hero h1 { font-size: 2.1rem; }
+}
 /* ══════════════════════════════════════════════════
    LIGHT MODE — Warm editorial, sun-drenched & vivid
    ══════════════════════════════════════════════════ */
@@ -1533,14 +1775,14 @@ footer{
 <div id="toast"><span id="toast-icon">✓</span><span id="toast-msg">Copied!</span></div>
 
 <!-- AI ORB -->
-<div id="ai-orb" onclick="toggleAI()" title="Chat with NEXUS AI">✦</div>
-<div id="ai-orb-label">NEXUS AI · Ask anything</div>
+<div id="ai-orb" onclick="toggleAI()" title="Chat with NEXUS">✦</div>
+<div id="ai-orb-label">NEXUS · Ask anything</div>
 
 <div id="ai-panel">
   <div class="ai-panel-header">
     <span style="font-size:1.1rem">✦</span>
     <div>
-      <div class="ai-panel-title">NEXUS AI Assistant</div>
+      <div class="ai-panel-title">NEXUS</div>
       <div style="font-size:0.72rem;color:var(--text3);margin-top:1px" id="ai-status-label">Loading AI...</div>
     </div>
     <div class="ai-orb-dot"></div>
@@ -1563,7 +1805,7 @@ footer{
 
 <!-- NAV -->
 <nav id="main-nav" role="navigation" aria-label="Main navigation">
-  <a class="nav-logo" href="https://rupeshishi3-bot.github.io/nexus.ai/" aria-label="NEXUS Tools – Home">NEXUS<span>.</span></a>
+  <a class="nav-logo" href="https://rupeshishi3-bot.github.io/nexus.ai/" aria-label="NEXUS Tools – Home">NEXUS<span>.AI</span></a>
   <div class="nav-links">
     <a href="#tools" aria-label="All Tools">Tools</a>
     <a href="#categories" aria-label="Tool Categories">Categories</a>
@@ -1718,9 +1960,11 @@ footer{
     <h2 class="section-title">The Complete Collection</h2>
     <p class="section-desc">100+ utility tools, all free, all instant. No account required.</p>
 
-    <!-- Filter tabs -->
-    <div class="tab-row" id="filter-tabs" style="margin-top:2rem">
-      <button class="tab-btn active" onclick="filterTools('all',this)">All</button>
+    <!-- Filter tabs — wrapped in sticky auto-hide bar (mobile only) -->
+    <div id="filter-bar" aria-label="Filter tools by category">
+      <div class="tab-row" id="filter-tabs" style="margin-top:2rem">
+        <button class="tab-btn active" onclick="filterTools('all',this)">All</button>
+      </div>
     </div>
 
     <div class="ad-slot">📢 Advertisement · Your ad could be here · <a href="javascript:void(0)" onclick="showToast('Email: advertise@nexustools.app','📧')" style="color:var(--accent)">Advertise with us</a></div>
@@ -2011,7 +2255,7 @@ footer{
   <div class="container">
     <div class="footer-grid">
       <div>
-        <div class="footer-brand">NEXUS<span style="color:var(--accent)">.</span></div>
+        <div class="footer-brand">NEXUS<span style="color:var(--accent)">.AI</span></div>
         <p class="footer-desc">India's next-generation utility platform. 100+ free calculators for finance, health, productivity, and more. No sign-up. No data stored. Ever.</p>
         <address style="font-style:normal;margin-top:0.75rem;font-size:0.8rem;color:var(--text3)">
           <a href="mailto:support@nexustools.app" style="color:var(--text3);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">support@nexustools.app</a>
@@ -2375,6 +2619,9 @@ function renderTools(filter='all'){
 function filterTools(cat,btn){
   if(btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
   renderTools(cat);
+  // Reveal filter bar on mobile when a tab is tapped
+  var fb=document.getElementById('filter-bar');
+  if(fb&&window.innerWidth<=768){fb.classList.remove('filter-bar--hidden');}
 }
 
 // ═══════════════════════════════════════════
@@ -4478,11 +4725,84 @@ renderTrending();
 renderRecent();
 renderFAQ();
 
-// Scroll-based nav
-window.addEventListener('scroll',()=>{
-  const nav=document.getElementById('main-nav');
-  nav.style.background=window.scrollY>50?'rgba(4,5,8,0.95)':'rgba(4,5,8,0.7)';
-});
+// ═══════════════════════════════════════════
+// NAV + FILTER BAR SCROLL BEHAVIOUR
+// ═══════════════════════════════════════════
+(function () {
+  'use strict';
+
+  var nav       = document.getElementById('main-nav');
+  var filterBar = document.getElementById('filter-bar');
+
+  // ── Nav background darkens on scroll (existing behaviour, preserved) ──
+  function updateNavBg() {
+    if (!nav) return;
+    var isLight = document.body.classList.contains('light-mode');
+    if (isLight) {
+      nav.style.background = window.scrollY > 50
+        ? 'rgba(250,248,244,0.97)'
+        : 'rgba(250,248,244,0.82)';
+    } else {
+      nav.style.background = window.scrollY > 50
+        ? 'rgba(4,5,8,0.95)'
+        : 'rgba(4,5,8,0.7)';
+    }
+  }
+
+  // ── Auto-hide filter bar (mobile ≤768px only) ──
+  var MOBILE_BP      = 768;      // px
+  var HIDE_THRESHOLD = 80;       // px scrolled before we start reacting
+  var DELTA          = 6;        // px minimum scroll to register direction
+
+  var lastScrollY    = window.scrollY;
+  var ticking        = false;    // rAF gate — avoids scroll lag
+
+  function onScrollFrame() {
+    ticking = false;
+    var currentY = window.scrollY;
+
+    // Only apply on mobile screens
+    if (window.innerWidth <= MOBILE_BP && filterBar) {
+      var delta = currentY - lastScrollY;
+
+      if (currentY > HIDE_THRESHOLD) {
+        if (delta > DELTA) {
+          // Scrolling DOWN — hide the bar
+          filterBar.classList.add('filter-bar--hidden');
+        } else if (delta < -DELTA) {
+          // Scrolling UP — show the bar
+          filterBar.classList.remove('filter-bar--hidden');
+        }
+      } else {
+        // Near the top — always show
+        filterBar.classList.remove('filter-bar--hidden');
+      }
+    } else if (filterBar) {
+      // Desktop: ensure the bar is always visible (remove any leftover class)
+      filterBar.classList.remove('filter-bar--hidden');
+    }
+
+    lastScrollY = currentY;
+    updateNavBg();
+  }
+
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(onScrollFrame);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // Re-check on resize (orientation change etc.)
+  window.addEventListener('resize', function () {
+    if (filterBar && window.innerWidth > MOBILE_BP) {
+      filterBar.classList.remove('filter-bar--hidden');
+    }
+  }, { passive: true });
+
+  // Initial paint
+  updateNavBg();
+}());
 
 // Keyboard shortcut for cmd
 document.addEventListener('keydown',e=>{

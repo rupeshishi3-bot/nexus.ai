@@ -2515,40 +2515,29 @@ function toggleTheme(){
 })();
 
 // ═══════════════════════════════════════════
-// AI PANEL — WebLLM local browser inference
+// AI PANEL — Hybrid: local quick replies + Worker
 // ═══════════════════════════════════════════
 let aiHistory = [];
 let aiIsOpen = false;
 let aiIsTyping = false;
-let webllmEngine = null;
-let webllmReady = false;
 
-// Load WebLLM via ES module and initialise engine on page load
-(async function initWebLLM() {
-  try {
-    const { CreateMLCEngine } = await import(
-      "https://esm.run/@mlc-ai/web-llm"
-    );
-    const MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-    webllmEngine = await CreateMLCEngine(MODEL, {
-      initProgressCallback: (info) => {
-        const label = document.getElementById('ai-status-label');
-        if (label) {
-          const pct = info.progress != null ? Math.round(info.progress * 100) : null;
-          label.textContent = pct != null
-            ? `Loading AI… ${pct}%`
-            : (info.text ? info.text.substring(0, 40) : 'Loading AI…');
-        }
-      }
-    });
-    webllmReady = true;
-    const label = document.getElementById('ai-status-label');
-    if (label) label.textContent = 'AI Ready · Runs locally';
-  } catch(err) {
-    console.error('WebLLM init failed:', err);
-    const label = document.getElementById('ai-status-label');
-    if (label) label.textContent = 'AI failed to load.';
-  }
+const WORKER_URL = 'https://nexus-chatbot.rupeshishi3.workers.dev/';
+
+const quickReplies = {
+  hi: "Hello! Welcome to Nexus.",
+  hello: "Hi there! How can I help?",
+  help: "I'm here to help.",
+  contact: "Please use our contact form.",
+  price: "Please contact us for pricing information.",
+  services: "We provide various tools and services.",
+  thanks: "You're welcome!",
+  bye: "Have a great day!"
+};
+
+// Mark AI as ready immediately (no model download needed)
+(function initHybridAI() {
+  const label = document.getElementById('ai-status-label');
+  if (label) label.textContent = 'AI Ready · Powered by NEXUS';
 })();
 
 function toggleAI(){
@@ -2600,11 +2589,6 @@ async function aiSend() {
   const text = input.value.trim();
   if(!text || aiIsTyping) return;
 
-  if(!webllmReady || !webllmEngine) {
-    aiAddBotMsg("AI is still loading. Please wait a moment and try again.");
-    return;
-  }
-
   input.value = '';
   aiIsTyping = true;
   document.getElementById('ai-send').disabled = true;
@@ -2612,30 +2596,38 @@ async function aiSend() {
   aiAddUserMsg(text);
   aiHistory.push({ role: 'user', content: text });
 
-  const indicator = aiAddBotMsg('', true);
-
-  // Show thinking status
   const label = document.getElementById('ai-status-label');
-  if (label) label.textContent = 'Thinking…';
+
+  // ── Step 1: Check local quick replies (case-insensitive, trimmed) ──
+  const key = text.toLowerCase().trim();
+  if(quickReplies[key]) {
+    const localReply = quickReplies[key];
+    aiAddBotMsg(localReply);
+    aiHistory.push({ role: 'assistant', content: localReply });
+    aiIsTyping = false;
+    document.getElementById('ai-send').disabled = false;
+    return;
+  }
+
+  // ── Step 2: No local match — call the Worker ──
+  const indicator = aiAddBotMsg('', true);
+  if(label) label.textContent = 'Thinking…';
 
   try {
-    const reply = await webllmEngine.chat.completions.create({
-      messages: [
-        {
-          role: 'system',
-          content: "You are NEXUS AI, a helpful assistant for NEXUS Tools — India's utility platform with 100+ free calculators including EMI, SIP, GST, BMI, income tax, QR code, password generator, word counter and more. Answer questions about finance, health, productivity concisely and helpfully. When relevant, mention specific NEXUS tool names like 'EMI Calculator', 'SIP Calculator', 'GST Calculator', 'BMI Calculator', etc."
-        },
-        ...aiHistory
-      ]
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
     });
 
-    const finalReply = reply.choices[0].message.content || "Sorry, I couldn't generate a response.";
+    const data = await response.json();
+    const finalReply = data.reply || "Sorry, I couldn't generate a response.";
 
     indicator.remove();
     aiAddBotMsg(finalReply);
     aiHistory.push({ role: 'assistant', content: finalReply });
 
-    if (label) label.textContent = 'AI Ready · Runs locally';
+    if(label) label.textContent = 'AI Ready · Powered by NEXUS';
 
     // Show clickable tool chip if a NEXUS tool is mentioned
     const mentioned = TOOLS.find(t => finalReply.includes(t.name));
@@ -2652,10 +2644,10 @@ async function aiSend() {
     }
 
   } catch(e) {
-    console.error('WebLLM generation error:', e);
+    console.error('Worker request failed:', e);
     indicator.remove();
-    aiAddBotMsg("Please try again.");
-    if (label) label.textContent = 'AI Ready · Runs locally';
+    aiAddBotMsg("AI is currently busy. Please try again later.");
+    if(label) label.textContent = 'AI Ready · Powered by NEXUS';
   }
 
   aiIsTyping = false;

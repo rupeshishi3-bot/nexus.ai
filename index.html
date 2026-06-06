@@ -485,6 +485,8 @@ h2.section-title{
   opacity:0;transition:opacity .3s;pointer-events:none;
 }
 .cat-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,0.3)}
+.cat-card--active{border-color:var(--accent)!important;box-shadow:0 0 0 1px var(--accent),0 8px 24px var(--glow)!important;background:rgba(91,141,238,0.07)!important;}
+.cat-card--active .cat-name{color:var(--accent)}
 .cat-card:hover::before{opacity:1}
 .cat-icon{font-size:1.75rem;margin-bottom:0.75rem}
 .cat-name{font-family:var(--font-display);font-size:0.9375rem;font-weight:700;margin-bottom:0.25rem}
@@ -2629,29 +2631,6 @@ footer{
       </div>
     </div>
 
-    <!-- SEO-rich tool quick-access strip -->
-    <nav aria-label="Quick tool links" style="margin:2rem 0 1.5rem;padding:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2)">
-      <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:0.75rem">Quick Access — All Tools</div>
-      <div style="display:flex;flex-wrap:wrap;gap:0.5rem" role="list">
-        <a href="#tools" onclick="openTool('emi')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">EMI Calculator</a>
-        <a href="#tools" onclick="openTool('sip')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">SIP Calculator</a>
-        <a href="#tools" onclick="openTool('gst')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">GST Calculator</a>
-        <a href="#tools" onclick="openTool('bmi')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">BMI Calculator</a>
-        <a href="#tools" onclick="openTool('tax')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">Income Tax 2025-26</a>
-        <a href="#tools" onclick="openTool('salary')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">Salary Calculator</a>
-        <a href="#tools" onclick="openTool('qr')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">QR Code Generator</a>
-        <a href="#tools" onclick="openTool('password')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">Password Generator</a>
-        <a href="#tools" onclick="openTool('word-count')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">Word Counter</a>
-        <a href="#tools" onclick="openTool('currency')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">Currency Converter</a>
-        <a href="#tools" onclick="openTool('cgpa')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">CGPA to Percentage</a>
-        <a href="#tools" onclick="openTool('fd')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">FD Calculator</a>
-        <a href="#tools" onclick="openTool('calorie')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">Calorie Calculator</a>
-        <a href="#tools" onclick="openTool('age')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">Age Calculator</a>
-        <a href="#tools" onclick="openTool('typing')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">Typing Speed Test</a>
-        <a href="#tools" onclick="openTool('unit')" role="listitem" style="font-size:0.78rem;padding:0.3rem 0.65rem;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">Unit Converter</a>
-      </div>
-    </nav>
-
     <div class="footer-bottom">
       <span>© 2025 NEXUS Tools. All rights reserved. Made with ❤️ in India 🇮🇳</span>
       <span style="display:flex;align-items:center;gap:1rem;font-size:0.78rem;color:var(--text3)">
@@ -2886,9 +2865,13 @@ typeHero();
 // ═══════════════════════════════════════════
 function renderCategories(){
   const grid=document.getElementById('cat-grid');
+  // Track active category for highlighting
+  const activeCat = (new URLSearchParams(window.location.search)).get('category') || '';
   grid.innerHTML=CATEGORIES.map(c=>{
     const count=TOOLS.filter(t=>t.cat===c.id).length;
-    return `<a href="#tools" class="cat-card" style="--cat-glow:${c.glow}" onclick="filterTools('${c.id}',null)">
+    const isActive = c.id.toLowerCase() === activeCat.toLowerCase();
+    return `<a href="#tools" class="cat-card${isActive?' cat-card--active':''}" style="--cat-glow:${c.glow}${isActive?';border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)':''}"
+      onclick="event.preventDefault();filterTools('${c.id}',null);document.getElementById('tools').scrollIntoView({behavior:'smooth',block:'start'})">
       <div class="cat-icon">${c.icon}</div>
       <div class="cat-name">${c.id}</div>
       <div class="cat-count">${count} tools</div>
@@ -2960,10 +2943,50 @@ function renderTools(filter='all'){
   grid.innerHTML=html;
 }
 
-function filterTools(cat,btn){
-  if(btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+function filterTools(cat,btn,skipHistory){
+  // ── 1. Normalise category ──────────────────────────────────────────────
+  cat = cat || 'all';
+
+  // ── 2. Sync ALL tab buttons by value (fixes cat-card passing null) ─────
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    const match = b.textContent.trim().toLowerCase() === (cat==='all'?'all':cat.toLowerCase());
+    b.classList.toggle('active', match);
+  });
+
+  // ── 3. Update section heading so user sees what category is active ─────
+  const titleEl = document.querySelector('#tools h2.section-title');
+  const labelEl = document.querySelector('#tools .section-label');
+  if(titleEl){
+    titleEl.textContent = cat==='all' ? 'The Complete Collection' : cat+' Tools';
+  }
+  if(labelEl){
+    labelEl.textContent = cat==='all' ? 'All Tools' : cat;
+  }
+
+  // ── 4. Render filtered tools ───────────────────────────────────────────
   renderTools(cat);
-  // Reveal filter bar on mobile when a tab is tapped
+
+  // ── 4b. Sync cat-card active highlight ────────────────────────────────
+  document.querySelectorAll('.cat-card').forEach(card=>{
+    const cardCat = card.querySelector('.cat-name');
+    if(!cardCat) return;
+    const match = cat !== 'all' && cardCat.textContent.trim().toLowerCase() === cat.toLowerCase();
+    card.classList.toggle('cat-card--active', match);
+    card.style.borderColor = match ? 'var(--accent)' : '';
+    card.style.boxShadow = match ? '0 0 0 1px var(--accent),0 8px 24px var(--glow)' : '';
+    card.style.background = match ? 'rgba(91,141,238,0.07)' : '';
+    if(cardCat) cardCat.style.color = match ? 'var(--accent)' : '';
+  });
+
+  // ── 5. Push URL so browser back/forward works & URLs are shareable ─────
+  if(!skipHistory){
+    const url = cat==='all'
+      ? window.location.pathname + window.location.search.replace(/[?&]category=[^&]*/g,'').replace(/^&/,'?').replace(/^\?$/,'')
+      : (window.location.pathname + '?category=' + encodeURIComponent(cat));
+    history.pushState({category:cat}, '', url);
+  }
+
+  // ── 6. Reveal filter bar on mobile when a tab is tapped ───────────────
   var fb = document.getElementById('filter-bar');
   var sp = document.getElementById('filter-bar-spacer');
   if(fb && window.innerWidth<=768){ fb.classList.remove('filter-bar--hidden'); }
@@ -5201,10 +5224,28 @@ function scrollToTools(){
   if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-// ═══════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════
-renderCategories();
+// ── Read ?category= from URL on page load ──────────────────────────────
+(function applyURLCategory(){
+  const params = new URLSearchParams(window.location.search);
+  const cat = params.get('category');
+  if(cat){
+    // Wait for renderFilterTabs to finish, then apply
+    setTimeout(function(){
+      filterTools(cat, null, true); // skipHistory=true (we're already on this URL)
+      // Also scroll to tools section if category param present
+      const toolsSection = document.getElementById('tools');
+      if(toolsSection){ setTimeout(function(){ toolsSection.scrollIntoView({behavior:'smooth',block:'start'}); }, 300); }
+    }, 0);
+  }
+})();
+
+// ── Handle browser back/forward ─────────────────────────────────────────
+window.addEventListener('popstate', function(e){
+  const cat = (e.state && e.state.category) ? e.state.category
+            : (new URLSearchParams(window.location.search)).get('category') || 'all';
+  filterTools(cat, null, true); // skipHistory=true — already in history
+  renderCategories(); // re-render cat cards to update active highlight
+});
 renderFilterTabs();
 renderTools();
 renderTrending();

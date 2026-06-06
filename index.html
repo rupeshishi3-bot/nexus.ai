@@ -224,6 +224,7 @@ body{
   cursor:none;
   transition:background .4s ease, color .4s ease;
 }
+
 nav, .modal-box, .cmd-box, #ai-panel, .tool-card, .cat-card, .price-card,
 .testi-card, .blog-card, .aff-card, .result-box, .stat-block, .featured-banner,
 .hero-search, #toast, .trend-tag, .recent-tag, footer {
@@ -265,7 +266,7 @@ nav, .modal-box, .cmd-box, #ai-panel, .tool-card, .cat-card, .price-card,
 @media(max-width:768px){#bg-canvas{display:none}}
 
 /* LAYOUT */
-.site-wrap{position:relative;z-index:1}
+.site-wrap{position:relative;z-index:1;}
 
 /* NAV */
 nav{
@@ -1286,12 +1287,12 @@ footer{
 }
 
 @media (max-width: 768px) {
-  /* Filter bar: sticky but NOT glassmorphism wall. 
-     Transitions smoothly up/down based on scroll direction.
-     Uses translateY so layout doesn't collapse — no content jump. */
+  /* Filter bar: FIXED (not sticky) so it is immune to every ancestor overflow.
+     body{overflow-x:hidden} turns body into a scroll container which silently
+     breaks position:sticky — fixed positioning bypasses that entirely. */
   #filter-bar {
-    position: sticky;
-    top: 64px;
+    position: fixed;
+    top: 64px;      /* sits flush under the fixed nav */
     left: 0;
     right: 0;
     z-index: 90;
@@ -1300,22 +1301,31 @@ footer{
     -webkit-backdrop-filter: blur(16px) saturate(140%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     padding: 0.5rem 1rem;
-    margin: 0 -1rem;
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity   0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    transition: top     0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1),
                 box-shadow 0.2s;
-    will-change: transform, opacity;
+    will-change: top, opacity;
     box-sizing: border-box;
-    /* Subtle bottom shadow to lift it visually */
     box-shadow: 0 4px 16px rgba(0,0,0,0.18);
   }
 
-  /* Hidden state — slides up behind the nav */
+  /* Hidden: slide up behind the nav bar */
   #filter-bar.filter-bar--hidden {
-    transform: translateY(-110%);
+    top: -200px;
     opacity: 0;
     pointer-events: none;
     box-shadow: none;
+  }
+
+  /* Spacer holds the layout gap that the fixed bar used to occupy */
+  #filter-bar-spacer {
+    display: block;
+    height: 52px;   /* matches filter-bar rendered height: 8+8px padding + 36px tabs */
+    transition: height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #filter-bar.filter-bar--hidden ~ #filter-bar-spacer,
+  #filter-bar-spacer.hidden {
+    height: 0;
   }
 
   /* The tab row inside */
@@ -2267,12 +2277,14 @@ footer{
     <h2 class="section-title">The Complete Collection</h2>
     <p class="section-desc">100+ utility tools, all free, all instant. No account required.</p>
 
-    <!-- Filter tabs — wrapped in sticky auto-hide bar (mobile only) -->
+    <!-- Filter tabs — wrapped in fixed auto-hide bar (mobile only) -->
     <div id="filter-bar" aria-label="Filter tools by category">
       <div class="tab-row" id="filter-tabs" style="margin-top:2rem">
         <button class="tab-btn active" onclick="filterTools('all',this)">All</button>
       </div>
     </div>
+    <!-- Spacer holds the vertical gap the fixed filter-bar occupies on mobile -->
+    <div id="filter-bar-spacer"></div>
 
     <div class="tools-grid" id="tools-grid"></div>
 
@@ -2952,8 +2964,10 @@ function filterTools(cat,btn){
   if(btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
   renderTools(cat);
   // Reveal filter bar on mobile when a tab is tapped
-  var fb=document.getElementById('filter-bar');
-  if(fb&&window.innerWidth<=768){fb.classList.remove('filter-bar--hidden');}
+  var fb = document.getElementById('filter-bar');
+  var sp = document.getElementById('filter-bar-spacer');
+  if(fb && window.innerWidth<=768){ fb.classList.remove('filter-bar--hidden'); }
+  if(sp && window.innerWidth<=768){ sp.classList.remove('hidden'); }
 }
 
 // ═══════════════════════════════════════════
@@ -5070,93 +5084,116 @@ function convertTZ(){
 // SMART FILTER BAR — AUTO-HIDE ON SCROLL DOWN, REAPPEAR ON SCROLL UP
 // ═══════════════════════════════════════════
 function initSmartFilterBar(){
-  var filterBar=document.getElementById('filter-bar');
-  var restoreFab=document.getElementById('filter-restore-fab');
-  var backToToolsFab=document.getElementById('back-to-tools-fab');
-  var scrollProgress=document.getElementById('scroll-progress');
-  var toolsSection=document.getElementById('tools');
-  
+  console.log('initSmartFilterBar started');
+  var filterBar    = document.getElementById('filter-bar');
+  var spacer       = document.getElementById('filter-bar-spacer');
+  var restoreFab   = document.getElementById('filter-restore-fab');
+  var backToToolsFab = document.getElementById('back-to-tools-fab');
+  var scrollProgress = document.getElementById('scroll-progress');
+  var toolsSection = document.getElementById('tools');
+
+  console.log('filterBar:', filterBar);
+
   if(!filterBar) return;
-  
-  var lastScrollY=window.scrollY;
-  var filterBarHidden=false;
-  var toolsSectionTop=0;
-  var toolsSectionBottom=0;
-  var ticking=false;
+
+  // Size the spacer to match the bar's real rendered height (mobile only)
+  function syncSpacer(){
+    if(window.innerWidth <= 768 && spacer){
+      spacer.style.height = filterBar.offsetHeight + 'px';
+    } else if(spacer){
+      spacer.style.height = '0';
+    }
+  }
+  syncSpacer();
+  window.addEventListener('resize', syncSpacer, {passive:true});
+
+  var lastScrollY = window.scrollY;
+  var filterBarHidden = false;
+  var toolsSectionTop = 0;
+  var toolsSectionBottom = 0;
+  var ticking = false;
 
   function updateToolsPos(){
     if(toolsSection){
-      var r=toolsSection.getBoundingClientRect();
-      toolsSectionTop=r.top+window.scrollY;
-      toolsSectionBottom=toolsSectionTop+toolsSection.offsetHeight;
+      var r = toolsSection.getBoundingClientRect();
+      toolsSectionTop    = r.top + window.scrollY;
+      toolsSectionBottom = toolsSectionTop + toolsSection.offsetHeight;
     }
   }
   updateToolsPos();
   window.addEventListener('resize', updateToolsPos, {passive:true});
 
+  function hideBar(){
+    filterBar.classList.add('filter-bar--hidden');
+    if(spacer) spacer.classList.add('hidden');
+    filterBarHidden = true;
+    if(restoreFab) restoreFab.classList.add('visible');
+    console.log('hidden class added');
+  }
+  function showBar(){
+    filterBar.classList.remove('filter-bar--hidden');
+    if(spacer) spacer.classList.remove('hidden');
+    filterBarHidden = false;
+    if(restoreFab) restoreFab.classList.remove('visible');
+  }
+
   function onScroll(){
-    if(ticking)return;
-    ticking=true;
+    if(ticking) return;
+    ticking = true;
     requestAnimationFrame(function(){
-      var currentY=window.scrollY;
-      var docH=document.documentElement.scrollHeight-window.innerHeight;
-      
-      // Scroll progress bar
-      if(scrollProgress && docH>0){
-        scrollProgress.style.width=(currentY/docH*100)+'%';
+      var currentY = window.scrollY;
+      console.log('scrollY:', currentY);
+      var docH = document.documentElement.scrollHeight - window.innerHeight;
+
+      if(scrollProgress && docH > 0){
+        scrollProgress.style.width = (currentY / docH * 100) + '%';
       }
 
-      // Only apply auto-hide on mobile
-      if(window.innerWidth<=768){
-        var delta=currentY-lastScrollY;
-        var isInToolsSection=currentY>=(toolsSectionTop-100) && currentY<=(toolsSectionBottom+200);
-        
+      if(window.innerWidth <= 768){
+        var delta = currentY - lastScrollY;
+        var isInToolsSection = currentY >= (toolsSectionTop - 100) && currentY <= (toolsSectionBottom + 200);
+
         if(isInToolsSection){
-          if(delta>4 && !filterBarHidden && currentY>toolsSectionTop+120){
-            filterBar.classList.add('filter-bar--hidden');
-            filterBarHidden=true;
-            if(restoreFab) restoreFab.classList.add('visible');
+          if(delta > 4 && !filterBarHidden && currentY > toolsSectionTop + 120){
+            hideBar();
           }
-          if(delta<-8 && filterBarHidden){
-            filterBar.classList.remove('filter-bar--hidden');
-            filterBarHidden=false;
-            if(restoreFab) restoreFab.classList.remove('visible');
+          if(delta < -8 && filterBarHidden){
+            showBar();
           }
         } else {
-          filterBar.classList.remove('filter-bar--hidden');
-          filterBarHidden=false;
-          if(restoreFab) restoreFab.classList.remove('visible');
+          if(filterBarHidden) showBar();
         }
-        
+
         if(backToToolsFab){
-          if(currentY>toolsSectionBottom+200){
+          if(currentY > toolsSectionBottom + 200){
             backToToolsFab.classList.add('visible');
           } else {
             backToToolsFab.classList.remove('visible');
           }
         }
       } else {
-        // Desktop: always show
-        filterBar.classList.remove('filter-bar--hidden');
-        filterBarHidden=false;
-        if(restoreFab) restoreFab.classList.remove('visible');
+        if(filterBarHidden) showBar();
+        if(restoreFab)    restoreFab.classList.remove('visible');
         if(backToToolsFab) backToToolsFab.classList.remove('visible');
       }
 
-      lastScrollY=currentY;
-      ticking=false;
+      lastScrollY = currentY;
+      ticking = false;
     });
   }
 
   window.addEventListener('scroll', onScroll, {passive:true});
+  console.log('scroll listener attached to window');
 }
 
 function restoreFilterBar(){
-  var fb=document.getElementById('filter-bar');
-  var fab=document.getElementById('filter-restore-fab');
-  if(fb){ fb.classList.remove('filter-bar--hidden'); }
-  if(fab){ fab.classList.remove('visible'); }
-  if(fb){ fb.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  var fb  = document.getElementById('filter-bar');
+  var sp  = document.getElementById('filter-bar-spacer');
+  var fab = document.getElementById('filter-restore-fab');
+  if(fb)  { fb.classList.remove('filter-bar--hidden'); }
+  if(sp)  { sp.classList.remove('hidden'); }
+  if(fab) { fab.classList.remove('visible'); }
+  if(fb)  { fb.scrollIntoView({behavior:'smooth', block:'nearest'}); }
 }
 
 function scrollToTools(){
